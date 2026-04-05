@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Money Tracker</title>
+<link rel="icon" href="/icon-192.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="/assets/css/app.css">
+
+<!-- Firebase SDKs (compat v10) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- Loading Screen (shown while Firebase checks auth) -->
+<div id="loading-screen">
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- Login Screen -->
+<div id="login-screen" style="display:none">
+  <div class="login-card">
+    <h1>Money Tracker</h1>
+    <p>Sign in to sync your financial data across all your devices</p>
+    <button id="google-signin-btn" onclick="signIn()">Sign in with Google</button>
+    <p class="login-note">Your data is stored securely on Firebase and is only accessible by you.</p>
+  </div>
+</div>
+
+<!-- Sidebar overlay for mobile -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">Money Tracker</div>
+    <div class="sidebar-subtitle">Personal Finance</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="navigate('dashboard')">🏠 Dashboard</div>
+    <div class="nav-section">Transactions</div>
+    <div class="nav-item" onclick="navigate('add')">➕ Add Transaction</div>
+    <div class="nav-item" onclick="navigate('list')">📋 All Transactions</div>
+    <div class="nav-section">Analytics</div>
+    <div class="nav-item" onclick="navigate('charts')">📊 Charts</div>
+    <div class="nav-item" onclick="navigate('budget')">🎯 Budget</div>
+    <div class="nav-section">Data</div>
+    <div class="nav-item" onclick="navigate('export')">💾 Export / Import</div>
+  </div>
+  <div class="sidebar-footer">v2.0 · Firebase Sync</div>
+</nav>
+
+<!-- Main content -->
+<div id="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button id="menu-toggle" onclick="toggleSidebar()">&#9776;</button>
+      <div class="topbar-title" id="page-title">Dashboard</div>
+    </div>
+    <div class="topbar-actions">
+      <div id="sync-indicator" title="Syncing...">
+        <div class="sync-dot"></div>
+        <span>Saving...</span>
+      </div>
+      <span class="current-month-label" id="current-month-label"></span>
+      <button class="btn btn-primary" onclick="navigate('add')">+ Add</button>
+      <div class="topbar-user">
+        <img id="user-avatar" src="" alt="avatar">
+        <span id="user-name"></span>
+        <button id="signout-btn" onclick="signOut()">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <!-- Migration banner -->
+    <div id="migrate-banner">
+      <span></span>
+      <button>Import old data</button>
+    </div>
+    <!-- Month selector bar -->
+    <div class="dash-month-bar">
+      <label>Period:</label>
+      <select id="dash-month-select" onchange="onDashMonthChange()"></select>
+      <span id="dash-month-summary" class="month-summary"></span>
+    </div>
+    <div class="summary-grid" id="summary-grid"></div>
+    <div class="dash-grid">
+      <div class="card chart-full">
+        <div class="card-header">
+          <div class="card-title">Daily Spending</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="height:220px">
+            <canvas id="dashDailyChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dash-grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">6-Month Overview</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="height:220px">
+            <canvas id="dashMiniChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent Transactions</div>
+        </div>
+        <div class="card-body" id="recent-list" style="padding-top:6px"></div>
+      </div>
+    </div>
+    <div class="dash-grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Spending by Category</div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center">
+            <div class="chart-container" style="height:200px">
+              <canvas id="dashPieChart"></canvas>
+            </div>
+            <div id="dashPieLegend" style="font-size:12px;display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Monthly Summary</div>
+        </div>
+        <div class="card-body" id="month-stats"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD TRANSACTION -->
+  <div class="page" id="page-add">
+    <div class="section-title">Add Transaction</div>
+    <div class="card" style="max-width:600px">
+      <div class="card-body">
+        <form id="tx-form" onsubmit="submitTransaction(event)">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Type</label>
+              <div class="type-toggle">
+                <button type="button" class="type-btn income active" id="type-income" onclick="setType('income')">Income</button>
+                <button type="button" class="type-btn expense" id="type-expense" onclick="setType('expense')">Expense</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Amount (VND)</label>
+              <input type="text" id="f-amount-display" placeholder="0" required>
+              <input type="hidden" id="f-amount">
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select id="f-category" required></select>
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="f-date" required>
+            </div>
+            <div class="form-group">
+              <label>Note</label>
+              <input type="text" id="f-note" placeholder="Enter a note...">
+            </div>
+            <div class="form-group full" style="margin-top:4px">
+              <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">
+                Save Transaction
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSACTION LIST -->
+  <div class="page" id="page-list">
+    <div class="section-title">Transactions</div>
+    <div class="filter-bar">
+      <input type="text" id="search-input" placeholder="Search..." oninput="renderList()">
+      <select id="filter-type" onchange="renderList()">
+        <option value="">All types</option>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+      <select id="filter-category" onchange="renderList()">
+        <option value="">All categories</option>
+      </select>
+      <select id="filter-month" onchange="renderList()">
+        <option value="">All months</option>
+      </select>
+      <button class="btn btn-outline" onclick="clearFilters()">Clear</button>
+    </div>
+    <div class="tx-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Note</th>
+            <th style="text-align:right">Amount</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tx-tbody"></tbody>
+      </table>
+    </div>
+    <div id="list-empty" class="empty-state" style="display:none">
+      <div class="es-icon">—</div>
+      <div class="es-text">No matching transactions</div>
+    </div>
+    <div id="list-summary" style="margin-top:12px;font-size:12px;color:var(--text-muted)"></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="page charts-page" id="page-charts">
+    <div class="section-title">Charts &amp; Analytics</div>
+    <div class="chart-controls-row">
+      <label>Period:</label>
+      <select id="chart-preset" onchange="onPresetChange()">
+        <option value="6">6 months</option>
+        <option value="12" selected>1 year</option>
+        <option value="24">2 years</option>
+        <option value="60">5 years</option>
+        <option value="120">10 years</option>
+        <option value="0">Custom</option>
+      </select>
+      <div class="ctrl-sep"></div>
+      <label>From:</label>
+      <input type="date" id="chart-date-from" onchange="onDateRangeChange()">
+      <label>To:</label>
+      <input type="date" id="chart-date-to" onchange="onDateRangeChange()">
+      <button class="btn btn-primary" onclick="applyChartRange()" style="padding:6px 14px;font-size:12px">Refresh</button>
+    </div>
+    <div class="charts-grid">
+      <div class="card chart-full">
+        <div class="card-header">
+          <div class="card-title">Income, Expenses &amp; Savings</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="height:300px">
+            <canvas id="mainChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Spending by Category</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="height:260px">
+            <canvas id="pieChart"></canvas>
+          </div>
+          <div id="pieLegend" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;font-size:11px"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Income vs Expenses</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="height:260px">
+            <canvas id="compareChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card chart-full">
+        <div class="card-header">
+          <div class="card-title">Net Savings Trend</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="height:200px">
+            <canvas id="savingChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUDGET -->
+  <div class="page" id="page-budget">
+    <div class="section-title">Monthly Budget</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Set spending limits for each expense category. Budgets apply to the current month.</p>
+    <div class="budget-grid" id="budget-grid"></div>
+    <div id="budget-total"></div>
+
+    <div style="margin-top:28px">
+      <div class="section-title">Remaining Budget</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Monthly surplus/deficit per category. Positive = under budget, negative = over budget. Cumulative total shown at the bottom.</p>
+      <div id="remaining-budget-container"></div>
+    </div>
+  </div>
+
+  <!-- EXPORT/IMPORT -->
+  <div class="page" id="page-export">
+    <div class="section-title">Export / Import</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:720px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Export</div></div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">Download all your transactions and budgets as a JSON file.</p>
+          <div id="export-stats" style="margin-bottom:14px;font-size:12px;color:var(--text-muted)"></div>
+          <button class="btn btn-primary" onclick="exportData()" style="width:100%;justify-content:center">
+            Download JSON
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Import</div></div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">Restore data from a previously exported JSON file.</p>
+          <div class="import-area" onclick="document.getElementById('import-file').click()">
+            <div class="ia-icon">&#8593;</div>
+            <div>Click to select JSON file</div>
+            <div style="font-size:11px;margin-top:4px;opacity:0.7">Current data will be replaced</div>
+          </div>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+        </div>
+      </div>
+    </div>
+    <div class="card" style="max-width:720px;margin-top:16px">
+      <div class="card-header"><div class="card-title">Delete Data</div></div>
+      <div class="card-body" style="display:flex;align-items:center;justify-content:space-between">
+        <p style="font-size:13px;color:var(--text-muted)">Permanently delete all transactions and budgets. This cannot be undone.</p>
+        <button class="btn btn-danger" onclick="clearData()">Delete All</button>
+      </div>
+    </div>
+
+    <!-- MoMo Excel Import -->
+    <div class="card" style="max-width:720px;margin-top:16px">
+      <div class="card-header"><div class="card-title">📱 Import từ MoMo (.xlsx)</div></div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
+          Import lịch sử giao dịch từ file Excel xuất ra từ MoMo. Các giao dịch trùng (theo mã GD) sẽ tự động bỏ qua.
+        </p>
+        <div class="import-area" onclick="document.getElementById('import-momo-file').click()">
+          <div class="ia-icon">📊</div>
+          <div>Click để chọn file .xlsx từ MoMo</div>
+          <div style="font-size:11px;margin-top:4px;opacity:0.7">Chỉ thêm mới, không xoá dữ liệu hiện có</div>
+        </div>
+        <input type="file" id="import-momo-file" accept=".xlsx,.xls" style="display:none" onchange="importMomoXlsx(event)">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.6">
+          ⓘ Các cột cần có: <em>Thời gian, Loại giao dịch, Số Tiền, Trạng Thái GD</em>.<br>
+          Giao dịch chứa "Nhận / Hoàn / Nạp" sẽ được phân loại là <strong>Thu</strong>, còn lại là <strong>Chi</strong>. Category mặc định là "Other" — bạn có thể chỉnh sửa sau.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete/Edit confirmation modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Confirm Delete</div>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <p style="color:var(--text-muted)">Are you sure you want to delete this transaction?</p>
+    </div>
+    <div class="modal-footer" id="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-delete-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- SheetJS for Excel import -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- App scripts -->
+<script src="/assets/js/config.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/db.js"></script>
+<script src="/assets/js/app.js"></script>
+<script src="/assets/js/dashboard.js"></script>
+<script src="/assets/js/transactions.js"></script>
+<script src="/assets/js/charts.js"></script>
+<script src="/assets/js/budget.js"></script>
+<script src="/assets/js/dataio.js"></script>
+
+<!-- Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>

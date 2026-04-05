@@ -1,0 +1,74 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Gold Coin Shadow/Depth -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M54,54m-32,0a32,32 0,1 1,64 0a32,32 0,1 1,-64 0" />
+
+    <!-- Main Gold Coin Body -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M54,52m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0" />
+    
+    <group android:alpha="0.15">
+        <path
+            android:fillColor="#ffe082"
+            android:pathData="M512,512m-350,0a350,350 0,1 1,700 0a350,350 0,1 1,-700 0Z" />
+    </group>
+
+    <group>
+        <clip-path android:pathData="M512,512m-300,0a300,300 0,1 1,600 0a300,300 0,1 1,-600 0Z" />
+        <path
+            android:fillColor="#ffd740"
+            android:pathData="M512,512m-300,0a300,300 0,1 1,600 0a300,300 0,1 1,-600 0Z" />
+        <path
+            android:fillColor="#ffeb3b"
+            android:pathData="M512,212L512,222A290,290 0,0 1,802 512L812,512A300,300 0,0 0,512 212z" />
+        <path
+            android:fillColor="#c6a700"
+            android:pathData="M512,812L512,802A290,290 0,0 1,222 512L212,512A300,300 0,0 0,512 812z" />
+    </group>
+
+    <group>
+        <path
+            android:fillColor="#ffd740"
+            android:pathData="M492,692L492,627A80,80 0,0 1,432 587L382,537Q352,507 352,467Q352,407 412,367T532,327Q602,327 652,367T702,467L642,467Q642,427 612,407T532,387Q482,387 452,417T422,467Q422,497 452,527L502,577Q532,607 532,647L532,712A80,80 0,0 1,592 752L642,802Q672,832 672,872Q672,932 612,972T492,1012Q422,1012 372,972T322,872L382,872Q382,912 412,932T492,952Q542,952 572,922T602,872Q602,842 572,812L522,762Q492,732 492,692z" />
+        <path
+            android:fillColor="#ffeb3b"
+            android:pathData="M502,307L522,307L522,367L502,367z" />
+        <path
+            android:fillColor="#c6a700"
+            android:pathData="M502,972L522,972L522,1012L502,1012z" />
+    </group>
+
+    <group>
+        <group android:translateX="850" android:translateY="200" android:rotation="15">
+            <path android:fillColor="#ffd740" android:pathData="M512,512m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0Z" />
+            <path android:fillColor="#c6a700" android:pathData="M512,512m-35,0a35,35 0,1 1,70 0a35,35 0,1 1,-70 0Z" />
+            <path android:fillColor="#ffeb3b" android:pathData="M500,480L524,480L524,496L500,496zM500,512L524,512L524,528L500,528zM508,496L508,512L516,512L516,496z" />
+        </group>
+        
+        <group android:translateX="200" android:translateY="150" android:rotation="-10">
+            <path android:fillColor="#ffd740" android:pathData="M512,512m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0Z" />
+            <path android:fillColor="#c6a700" android:pathData="M512,512m-35,0a35,35 0,1 1,70 0a35,35 0,1 1,-70 0Z" />
+            <path android:fillColor="#ffeb3b" android:pathData="M502,482L512,482L512,502L502,502zM502,512L512,512L512,532L502,532z" />
+        </group>
+
+        <group android:translateX="700" android:translateY="750" android:rotation="45">
+            <path android:fillColor="#ffd740" android:pathData="M512,512m-35,0a35,35 0,1 1,70 0a35,35 0,1 1,-70 0Z" />
+            <path android:fillColor="#ffeb3b" android:pathData="M500,485L524,485L524,499L500,499zM500,511L524,511L524,525L500,525zM508,499L508,511L516,511L516,499z" />
+        </group>
+        
+        <group android:translateX="300" android:translateY="800" android:rotation="-30">
+            <path android:fillColor="#ffd740" android:pathData="M512,512m-35,0a35,35 0,1 1,70 0a35,35 0,1 1,-70 0Z" />
+            <path android:fillColor="#c6a700" android:pathData="M512,512m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0Z" />
+            <path android:fillColor="#ffeb3b" android:pathData="M502,485L512,485L512,501L502,501zM502,511L512,511L512,527L502,527z" />
+        </group>
+        
+        </group>
+
+</vector>
