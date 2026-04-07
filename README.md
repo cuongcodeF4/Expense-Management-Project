@@ -1,7 +1,7 @@
 # Expense Management Project
 
-A cross-platform solution for managing personal expenses, featuring both an Android mobile app and a web application. This project is designed to help users track, categorize, and analyze their expenses efficiently.
-
+A cross-platform solution for managing personal expenses, featuring both an Android mobile app and a web application. This project is designed to help users track, categorize, and analyze their expenses efficiently. This is a product from vibe coding :>
+ 
 ## Table of Contents
 - [Features](#features)
 - [Project Structure](#project-structure)
