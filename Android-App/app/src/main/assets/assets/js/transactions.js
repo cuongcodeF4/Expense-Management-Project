@@ -17,6 +17,8 @@ function submitTransaction(e) {
   const note = document.getElementById('f-note').value.trim();
 
   if (!amount || amount <= 0) { showToast('Invalid amount', 'error'); return; }
+  const selectedCategory = getCategories(_txType).find(item => item.id === category);
+  if (!selectedCategory) { showToast('Please add or select an active category', 'error'); return; }
 
   const data = getData();
   const tx = {
@@ -58,7 +60,7 @@ function renderList() {
     if (catF && t.category !== catF) return false;
     if (monthF && !t.date.startsWith(monthF)) return false;
     if (search) {
-      const cat = getCat(t.category);
+      const cat = getCat(t.category, t.type);
       if (!cat.label.toLowerCase().includes(search) &&
           !(t.note||'').toLowerCase().includes(search) &&
           !fmtVND(t.amount).includes(search)) return false;
@@ -80,17 +82,17 @@ function renderList() {
   if (empty) empty.style.display = 'none';
   if (tbody) {
     tbody.innerHTML = txs.map(t => {
-      const cat = getCat(t.category);
+      const cat = getCat(t.category, t.type);
       return `<tr>
         <td style="white-space:nowrap">${fmtDate(t.date)}</td>
         <td><span class="badge ${t.type}">${t.type === 'income' ? 'Income' : 'Expense'}</span></td>
-        <td>${cat.icon} ${cat.label}</td>
-        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.note || '\u2014'}</td>
+        <td>${categoryHtml(cat, true)}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.note || '\u2014')}</td>
         <td style="text-align:right;font-weight:600;color:${t.type==='income'?'var(--income-color)':'var(--expense-color)'}">
           ${t.type==='income'?'+':'-'}${fmtVND(t.amount)}
         </td>
         <td>
-          <button class="action-btn" title="Edit" onclick="editTransaction(${t.id})">✎</button>
+          <button class="action-btn" title="Edit" onclick="editTransaction(${t.id})">&#9998;</button>
           <button class="action-btn" title="Delete" onclick="deleteTransaction(${t.id})">&times;</button>
         </td>
       </tr>`;
@@ -125,16 +127,17 @@ function deleteTransaction(id) {
     <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
     <button class="btn btn-danger" id="confirm-delete-btn">Delete</button>
   `;
-  modal.classList.add('open');
   document.getElementById('confirm-delete-btn').onclick = () => {
     const data = getData();
     data.transactions = data.transactions.filter(t => t.id !== id);
     saveData(data);
     closeModal();
+    refreshCategoryControls();
     renderList();
     renderDashboard();
     showToast('Transaction deleted', 'info');
   };
+  openModal(document.querySelector('#modal-footer .btn-outline'));
 }
 
 function editTransaction(id) {
@@ -145,12 +148,11 @@ function editTransaction(id) {
   const modal = document.getElementById('delete-modal');
   document.getElementById('modal-title').textContent = 'Edit Transaction';
 
-  // Build the edit form inside the modal body
-  let categoryOptions = '';
-  const categories = tx.type === 'income' ? CATEGORIES.income : CATEGORIES.expense;
-  categories.forEach(cat => {
-    categoryOptions += `<option value="${cat.id}" ${cat.id === tx.category ? 'selected' : ''}>${cat.icon} ${cat.label}</option>`;
-  });
+  const categories = getCategories(tx.type);
+  const currentCategory = getCat(tx.category, tx.type);
+  if (currentCategory.active === false && !categories.some(category => category.id === currentCategory.id)) {
+    categories.unshift(currentCategory);
+  }
 
   document.getElementById('modal-body').innerHTML = `
     <form id="edit-tx-form" class="form-grid">
@@ -161,7 +163,7 @@ function editTransaction(id) {
       </div>
       <div class="form-group">
         <label>Category</label>
-        <select id="edit-category" required>${categoryOptions}</select>
+        <select id="edit-category" required></select>
       </div>
       <div class="form-group">
         <label>Date</label>
@@ -169,7 +171,7 @@ function editTransaction(id) {
       </div>
       <div class="form-group">
         <label>Note</label>
-        <input type="text" id="edit-note" value="${(tx.note || '').replace(/"/g, '&quot;')}" placeholder="Enter a note...">
+        <input type="text" id="edit-note" value="${escapeHtml(tx.note || '')}" placeholder="Enter a note...">
       </div>
     </form>
   `;
@@ -179,9 +181,16 @@ function editTransaction(id) {
     <button class="btn btn-primary" id="confirm-edit-btn">Save Changes</button>
   `;
 
-  modal.classList.add('open');
+  const categorySelect = document.getElementById('edit-category');
+  categories.forEach(category => {
+    const option = document.createElement('option');
+    option.value = category.id;
+    option.textContent = `${category.icon} ${category.label}${category.active === false ? ' (removed)' : ''}`;
+    option.selected = category.id === tx.category;
+    categorySelect.appendChild(option);
+  });
+  openModal(document.getElementById('edit-amount-display'));
 
-  // Add formatting logic for the edit modal
   const displayInput = document.getElementById('edit-amount-display');
   const hiddenInput = document.getElementById('edit-amount');
   displayInput.addEventListener('input', e => {
@@ -203,6 +212,11 @@ function editTransaction(id) {
     const note = document.getElementById('edit-note').value.trim();
 
     if (!amount || amount <= 0) { showToast('Invalid amount', 'error'); return; }
+    const selectedCategory = getCat(category, tx.type);
+    if (!selectedCategory || (selectedCategory.active === false && category !== tx.category)) {
+      showToast('Please select an active category', 'error');
+      return;
+    }
 
     const data = getData();
     const index = data.transactions.findIndex(t => t.id === id);
@@ -214,10 +228,10 @@ function editTransaction(id) {
         date,
         note
       };
-      // Re-sort in case date changed
       data.transactions.sort((a, b) => b.date.localeCompare(a.date));
       saveData(data);
       closeModal();
+      refreshCategoryControls();
       renderList();
       renderDashboard();
       showToast('Transaction updated', 'success');
@@ -225,6 +239,32 @@ function editTransaction(id) {
   };
 }
 
+function openModal(preferredFocus = null) {
+  const modal = document.getElementById('delete-modal');
+  if (!modal) return;
+  if (!modal.classList.contains('open')) _modalReturnFocus = document.activeElement;
+  modal.classList.add('open');
+  const main = document.getElementById('main');
+  const sidebar = document.getElementById('sidebar');
+  if (main) main.inert = true;
+  if (sidebar) sidebar.inert = true;
+  requestAnimationFrame(() => preferredFocus?.focus());
+}
+
 function closeModal() {
-  document.getElementById('delete-modal').classList.remove('open');
+  const modal = document.getElementById('delete-modal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  const main = document.getElementById('main');
+  const sidebar = document.getElementById('sidebar');
+  if (main) main.inert = false;
+  if (sidebar) sidebar.inert = false;
+  const returnTarget = _modalReturnFocus;
+  _modalReturnFocus = null;
+  requestAnimationFrame(() => {
+    const target = returnTarget?.isConnected
+      ? returnTarget
+      : document.querySelector('.page.active .category-manager-summary, .page.active button, .topbar button');
+    target?.focus();
+  });
 }

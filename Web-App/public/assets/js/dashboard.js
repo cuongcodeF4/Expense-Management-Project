@@ -84,12 +84,12 @@ function renderDashboard() {
       rl.innerHTML = '<div class="empty-state"><div class="es-text">No transactions yet</div></div>';
     } else {
       rl.innerHTML = recent.map(t => {
-        const cat = getCat(t.category);
+        const cat = getCat(t.category, t.type);
         return `<div class="tx-item">
-          <div class="tx-icon ${t.type}">${cat.icon}</div>
+          <div class="tx-icon ${t.type}">${escapeHtml(cat.icon)}</div>
           <div class="tx-info">
-            <div class="tx-cat">${cat.label}</div>
-            <div class="tx-note">${t.note || '\u2014'}</div>
+            <div class="tx-cat">${escapeHtml(cat.label)}${cat.active === false ? ' <span class="category-removed-label">(removed)</span>' : ''}</div>
+            <div class="tx-note">${escapeHtml(t.note || '\u2014')}</div>
           </div>
           <div class="tx-right">
             <div class="tx-amount ${t.type}">${t.type === 'income' ? '+' : '-'}${fmtVND(t.amount)}</div>
@@ -122,9 +122,9 @@ function renderDashboard() {
         <span class="stat-row-value" style="color:var(--primary)">${fmtVND(balance)}</span>
       </div>
       ${sorted.slice(0,3).map(([cat,amt]) => {
-        const c = getCat(cat);
+        const c = getCat(cat, 'expense');
         return `<div class="stat-row">
-          <span class="stat-row-label">${c.label}</span>
+          <span class="stat-row-label">${escapeHtml(c.label)}</span>
           <span class="stat-row-value">${fmtVND(amt)}</span>
         </div>`;
       }).join('')}
@@ -250,8 +250,8 @@ function renderDashPieChart(data, ym) {
   _charts.dashPie = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: entries.map(([id]) => getCat(id).label),
-      datasets: [{ data: entries.map(([,v])=>v), backgroundColor: PIE_COLORS, borderWidth: 0, hoverOffset: 6 }]
+      labels: entries.map(([id]) => getCat(id, 'expense').label),
+      datasets: [{ data: entries.map(([,v])=>v), backgroundColor: entries.map((_, i) => PIE_COLORS[i % PIE_COLORS.length]), borderWidth: 0, hoverOffset: 6 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -266,10 +266,11 @@ function renderDashPieChart(data, ym) {
   const total = entries.reduce((s,[,v])=>s+v,0);
   if (legendEl) {
     legendEl.innerHTML = entries.slice(0,6).map(([id,v],i) => {
-      const c = getCat(id);
+      const c = getCat(id, 'expense');
+      const color = PIE_COLORS[i % PIE_COLORS.length];
       return `<div style="display:flex;align-items:center;gap:6px">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${PIE_COLORS[i]};flex-shrink:0"></span>
-        <span>${c.icon} ${c.label}</span>
+        <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0"></span>
+        <span>${categoryHtml(c, true)}</span>
         <span style="margin-left:auto;font-weight:600;color:var(--text)">${(v/total*100).toFixed(0)}%</span>
       </div>`;
     }).join('');

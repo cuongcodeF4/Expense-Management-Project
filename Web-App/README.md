@@ -9,6 +9,7 @@
 - 📋 **Danh sách giao dịch** — Lọc, tìm kiếm, xóa
 - 📈 **Biểu đồ & Thống kê** — Xu hướng thu chi, tiết kiệm, so sánh danh mục
 - 🎯 **Ngân sách** — Đặt hạn mức chi tiêu theo danh mục
+- 🗂️ **Danh mục tùy chỉnh** — Thêm, xóa mềm và khôi phục danh mục thu/chi; giữ nguyên giao dịch cũ và thống kê
 - 💾 **Xuất / Nhập dữ liệu** — Backup JSON
 - 🔐 **Đăng nhập Google** — Dữ liệu đồng bộ đa thiết bị qua Firestore
 - 📱 **PWA** — Cài trên điện thoại, hỗ trợ offline
@@ -90,8 +91,13 @@ Truy cập tại: http://localhost:5000
 ```
 /users/{uid}/data/main   ← toàn bộ dữ liệu người dùng (1 document)
   {
+    schemaVersion: 2,
     transactions: [...],
     budgets: {...},
+    categories: {
+      income: [...],
+      expense: [...]
+    },
     nextId: number
   }
 ```

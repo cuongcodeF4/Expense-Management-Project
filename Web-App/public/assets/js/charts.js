@@ -189,8 +189,11 @@ function renderCharts() {
     _charts.pie = new Chart(pieCtx, {
       type: 'doughnut',
       data: {
-        labels: pieEntries.map(([id]) => `${getCat(id).icon} ${getCat(id).label}`),
-        datasets: [{ data: pieEntries.map(([,v])=>v), backgroundColor: PIE_COLORS, borderWidth: 2, borderColor: 'white', hoverOffset: 8 }]
+        labels: pieEntries.map(([id]) => {
+          const category = getCat(id, 'expense');
+          return `${category.icon} ${category.label}`;
+        }),
+        datasets: [{ data: pieEntries.map(([,v])=>v), backgroundColor: pieEntries.map((_, i) => PIE_COLORS[i % PIE_COLORS.length]), borderWidth: 2, borderColor: 'white', hoverOffset: 8 }]
       },
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '58%',
@@ -205,10 +208,11 @@ function renderCharts() {
     const pieLegend = document.getElementById('pieLegend');
     if (pieLegend) {
       pieLegend.innerHTML = pieEntries.map(([id,v],i) => {
-        const c = getCat(id);
+        const c = getCat(id, 'expense');
+        const color = PIE_COLORS[i % PIE_COLORS.length];
         return `<div style="display:flex;align-items:center;gap:4px;white-space:nowrap">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${PIE_COLORS[i]};flex-shrink:0"></span>
-          <span style="font-size:11px">${c.icon} ${c.label} <strong>${(v/pieTotal*100).toFixed(0)}%</strong></span>
+          <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0"></span>
+          <span style="font-size:11px">${categoryHtml(c, true)} <strong>${(v/pieTotal*100).toFixed(0)}%</strong></span>
         </div>`;
       }).join('');
     }

@@ -1,4 +1,4 @@
-const CACHE = 'money-v7';
+const CACHE = 'money-v9';
 const ASSETS = [
   '/',
   '/index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
   '/assets/css/app.css',
   '/assets/js/config.js',
   '/assets/js/auth.js',
+  '/assets/js/categories.js',
   '/assets/js/db.js',
   '/assets/js/app.js',
   '/assets/js/dashboard.js',

@@ -34,13 +34,18 @@ function signIn() {
   });
 }
 
-function signOut() {
-  auth.signOut().then(() => {
-    window._appData = null;
-    if (typeof _unsubscribe === 'function') _unsubscribe();
-    // Optional: Reload to clear any remaining state
+async function signOut() {
+  const button = document.getElementById('signout-btn');
+  if (button) button.disabled = true;
+  try {
+    if (typeof flushPendingSave === 'function') await flushPendingSave();
+    await auth.signOut();
     window.location.reload();
-  });
+  } catch (err) {
+    showToast('Sign out failed: ' + err.message, 'error');
+  } finally {
+    if (button) button.disabled = false;
+  }
 }
 
 let _authResolved = false;
@@ -73,6 +78,7 @@ auth.onAuthStateChanged(user => {
       processPendingMomoTransactions();
     }
   } else {
+    if (typeof resetAppDataState === 'function') resetAppDataState();
     window._uid = null;
     const loginScreen = document.getElementById('login-screen');
     if (loginScreen) loginScreen.style.display = 'flex';

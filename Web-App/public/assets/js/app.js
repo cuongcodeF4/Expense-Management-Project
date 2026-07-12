@@ -9,35 +9,10 @@ let _chartTo = null;
 let _charts = {};
 let _deleteId = null;
 let _dashYm = null;
+let _modalReturnFocus = null;
 
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-const CATEGORIES = {
-  income: [
-    { id: 'luong',      label: 'Salary',       icon: '💼' },
-    { id: 'thuong',     label: 'Bonus',        icon: '🎁' },
-    { id: 'dautư',      label: 'Investment',   icon: '📈' },
-    { id: 'kinhdoanh',  label: 'Business',     icon: '🏪' },
-    { id: 'khac_thu',   label: 'Other',        icon: '💰' },
-  ],
-  expense: [
-    { id: 'anuong',     label: 'Food',         icon: '🍜' },
-    { id: 'dichuyên',   label: 'Transport',    icon: '🚗' },
-    { id: 'nhao',       label: 'Housing',      icon: '🏠' },
-    { id: 'giaitri',    label: 'Entertainment',icon: '🎮' },
-    { id: 'suckhoe',    label: 'Healthcare',   icon: '🏥' },
-    { id: 'muasam',     label: 'Shopping',     icon: '🛒' },
-    { id: 'giaoduc',    label: 'Education',    icon: '📚' },
-    { id: 'thethao',    label: 'Sport',        icon: '⚽' },
-    { id: 'banhuu',     label: 'Friends',      icon: '👫' },
-    { id: 'huongthu',   label: 'Enjoy',        icon: '🎉' },
-    { id: 'khac_chi',   label: 'Other',        icon: '💸' },
-  ]
-};
-
-const ALL_CATS = [...CATEGORIES.income, ...CATEGORIES.expense];
-const getCat = id => ALL_CATS.find(c => c.id === id) || { label: id, icon: '📌' };
 
 // ── Init ──
 async function initApp() {
@@ -49,22 +24,10 @@ async function initApp() {
 
   initChartDateRange(12);
   updateCurrentMonthLabel();
-  populateCategorySelect();
-
-  const fc = document.getElementById('filter-category');
-  if (fc) {
-    fc.innerHTML = '<option value="">All categories</option>';
-    ALL_CATS.forEach(c => {
-      const o = document.createElement('option');
-      o.value = c.id;
-      o.textContent = c.icon + ' ' + c.label;
-      fc.appendChild(o);
-    });
-  }
-
   await loadAppData();
 
   initAmountInputFormatting();
+  refreshCategoryControls();
   populateFilterOptions();
   populateDashMonthSelect();
   renderDashboard();
@@ -85,13 +48,24 @@ function populateCategorySelect() {
 function updateCategorySelect() {
   const sel = document.getElementById('f-category');
   if (!sel) return;
+  const selected = sel.value;
+  const categories = getCategories(_txType);
   sel.innerHTML = '';
-  CATEGORIES[_txType].forEach(c => {
+  categories.forEach(c => {
     const o = document.createElement('option');
     o.value = c.id;
     o.textContent = c.icon + ' ' + c.label;
     sel.appendChild(o);
   });
+  sel.disabled = categories.length === 0;
+  if (categories.length === 0) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'No categories — add one in Budget';
+    sel.appendChild(option);
+  } else if (categories.some(category => category.id === selected)) {
+    sel.value = selected;
+  }
 }
 
 function populateFilterOptions() {
@@ -165,6 +139,7 @@ function showToast(msg, type = 'info') {
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
+  toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
   toast.textContent = msg;
   container.appendChild(toast);
   setTimeout(() => {
@@ -177,7 +152,26 @@ function showToast(msg, type = 'info') {
 
 // ── Keyboard ──
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal();
+  const modal = document.getElementById('delete-modal');
+  if (!modal?.classList.contains('open')) return;
+  if (e.key === 'Escape') {
+    closeModal();
+    return;
+  }
+  if (e.key !== 'Tab') return;
+
+  const focusable = [...modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    .filter(element => element.offsetParent !== null);
+  if (focusable.length === 0) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
 });
 
 function initAmountInputFormatting() {
@@ -185,6 +179,8 @@ function initAmountInputFormatting() {
   const hiddenInput = document.getElementById('f-amount');
 
   if (!displayInput || !hiddenInput) return;
+  if (displayInput.dataset.formattingInitialized === 'true') return;
+  displayInput.dataset.formattingInitialized = 'true';
 
   displayInput.addEventListener('input', e => {
     let value = e.target.value.replace(/\D/g, '');

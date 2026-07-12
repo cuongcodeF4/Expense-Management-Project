@@ -7,11 +7,17 @@ function signIn() {
   auth.signInWithPopup(provider).catch(err => showToast('Sign in failed: ' + err.message, 'error'));
 }
 
-function signOut() {
-  auth.signOut().then(() => {
-    window._appData = null;
-    if (typeof _unsubscribe === 'function') _unsubscribe();
-  });
+async function signOut() {
+  const button = document.getElementById('signout-btn');
+  if (button) button.disabled = true;
+  try {
+    if (typeof flushPendingSave === 'function') await flushPendingSave();
+    await auth.signOut();
+  } catch (err) {
+    showToast('Sign out failed: ' + err.message, 'error');
+  } finally {
+    if (button) button.disabled = false;
+  }
 }
 
 let _authResolved = false;
@@ -37,6 +43,7 @@ auth.onAuthStateChanged(user => {
 
     initApp();
   } else {
+    if (typeof resetAppDataState === 'function') resetAppDataState();
     window._uid = null;
     document.getElementById('login-screen').style.display = 'flex';
   }

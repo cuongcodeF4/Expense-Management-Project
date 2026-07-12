@@ -8,7 +8,8 @@ function renderExportStats() {
   if (!el) return;
   const totInc = data.transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totExp = data.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  el.innerHTML = `${data.transactions.length} transactions &middot; Income: ${fmtVND(totInc)} &middot; Expenses: ${fmtVND(totExp)}`;
+  const activeCategories = getAllCategories().length;
+  el.innerHTML = `${data.transactions.length} transactions &middot; ${activeCategories} active categories &middot; Income: ${fmtVND(totInc)} &middot; Expenses: ${fmtVND(totExp)}`;
 }
 
 function exportData() {
@@ -31,25 +32,14 @@ function importData(event) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const data = JSON.parse(e.target.result);
-      if (!data.transactions || !Array.isArray(data.transactions)) throw new Error('Invalid format');
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.transactions || !Array.isArray(parsed.transactions)) throw new Error('Invalid format');
+      const transactionCount = parsed.transactions.length;
+      const data = normalizeAppData(parsed);
+      if (data.transactions.length !== transactionCount) throw new Error('Invalid transaction data');
 
-      saveData(data);
-      window._appData = data;
-
-      populateDashMonthSelect();
-      renderDashboard();
-      renderBudget();
-      renderExportStats();
-
-      const sel = document.getElementById('filter-month');
-      if (sel) {
-        sel.innerHTML = '<option value="">All months</option>';
-        populateFilterOptions();
-      }
-
-      if (document.getElementById('page-list').classList.contains('active')) renderList();
-      if (document.getElementById('page-charts').classList.contains('active')) renderCharts();
+      saveData(data, { immediate: true });
+      refreshAllUI();
       showToast('Data imported successfully', 'success');
     } catch(err) {
       showToast('Invalid file format', 'error');
@@ -116,6 +106,8 @@ function importMomoXlsx(event) {
       );
 
       let imported = 0, skipped = 0, failed = 0;
+      let fallbackChanged = false;
+      const fallbackIds = {};
 
       const dataRows = rows.slice(headerRowIdx + 1).filter(r =>
         r.some(c => String(c).trim() !== '')
@@ -141,6 +133,7 @@ function importMomoXlsx(event) {
         const dateMatch = rawDate.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
         if (!dateMatch) { skipped++; continue; }
         const date = `${dateMatch[3]}-${dateMatch[2].padStart(2,'0')}-${dateMatch[1].padStart(2,'0')}`;
+        if (!isValidIsoDate(date)) { skipped++; continue; }
 
         // Determine income/expense from transaction type
         const txTypeRaw = col.txType !== undefined ? String(row[col.txType] || '').trim() : '';
@@ -149,11 +142,20 @@ function importMomoXlsx(event) {
                          txTypeLower.includes('hoàn') || txTypeLower.includes('hoan') ||
                          txTypeLower.includes('nạp') || txTypeLower.includes('nap');
         const type = isIncome ? 'income' : 'expense';
-        const category = isIncome ? 'khac_thu' : 'khac_chi';
 
         // Deduplication by MoMo transaction code
         const momoCode = col.txCode !== undefined ? String(row[col.txCode] || '').trim() : '';
         if (momoCode && existingCodes.has(momoCode)) { skipped++; continue; }
+
+        if (!fallbackIds[type]) {
+          const preferredId = type === 'income' ? 'khac_thu' : 'khac_chi';
+          const hadActiveFallback = data.categories[type].some(category =>
+            category.active !== false && (category.id === preferredId || category.label.toLocaleLowerCase() === 'other')
+          );
+          fallbackIds[type] = ensureActiveFallbackCategory(data, type);
+          if (!hadActiveFallback) fallbackChanged = true;
+        }
+        const category = fallbackIds[type];
 
         // Build note: counterparty name + transaction type
         let counterparty = '';
@@ -179,18 +181,11 @@ function importMomoXlsx(event) {
       }
 
       data.transactions.sort((a, b) => b.date.localeCompare(a.date));
-      saveData(data);
+      saveData(data, { immediate: true });
 
-      populateDashMonthSelect();
-      renderDashboard();
-      renderBudget();
-      renderExportStats();
-      const sel = document.getElementById('filter-month');
-      if (sel) { sel.innerHTML = '<option value="">All months</option>'; populateFilterOptions(); }
-      if (document.getElementById('page-list').classList.contains('active')) renderList();
-      if (document.getElementById('page-charts').classList.contains('active')) renderCharts();
+      refreshAllUI();
 
-      const detail = [failed && `${failed} thất bại`, skipped && `${skipped} bỏ qua/trùng`].filter(Boolean).join(', ');
+      const detail = [failed && `${failed} thất bại`, skipped && `${skipped} bỏ qua/trùng`, fallbackChanged && 'đã tạo/khôi phục danh mục Other'].filter(Boolean).join(', ');
       showToast(`Đã import ${imported} giao dịch${detail ? ' · ' + detail : ''}.`, 'success');
     } catch (err) {
       console.error('MoMo XLSX import error:', err);
@@ -200,21 +195,11 @@ function importMomoXlsx(event) {
   reader.readAsArrayBuffer(file);
 }
 
-function clearData() {  if (!confirm('Are you sure you want to delete all data? This cannot be undone.')) return;
-  const data = { transactions: [], budgets: {}, nextId: 1 };
-  saveData(data);
-  window._appData = data;
+function clearData() {  if (!confirm('Are you sure you want to delete all data and reset categories? This cannot be undone.')) return;
+  const data = createEmptyAppData();
+  saveData(data, { immediate: true });
 
   _dashYm = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
-  populateDashMonthSelect();
-  renderDashboard();
-  renderBudget();
-  renderExportStats();
-
-  const sel = document.getElementById('filter-month');
-  if (sel) sel.innerHTML = '<option value="">All months</option>';
-
-  if (document.getElementById('page-list').classList.contains('active')) renderList();
-  if (document.getElementById('page-charts').classList.contains('active')) renderCharts();
+  refreshAllUI();
   showToast('All data deleted', 'info');
 }

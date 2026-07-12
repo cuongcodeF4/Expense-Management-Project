@@ -3,12 +3,17 @@
 A cross-platform solution for managing personal expenses, featuring both an Android mobile app and a web application. This project is designed to help users track, categorize, and analyze their expenses efficiently.
 
 ## Table of Contents
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Technologies Used](#technologies-used)
-- [Contributing](#contributing)
-- [License](#license)
+- [Expense Management Project](#expense-management-project)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Project Structure](#project-structure)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Android App](#android-app)
+    - [Web App](#web-app)
+  - [Technologies Used](#technologies-used)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ## Features
 - Add, edit, and delete expenses
@@ -20,7 +25,7 @@ A cross-platform solution for managing personal expenses, featuring both an Andr
 ## Project Structure
 ```
 Expense-Management-Project/
-├── Android-App/      # Native Android application (Kotlin)
+├── Android-App/      # Native Android application (Kotlin) This source code is for checking on GitHub. The source code is not for built on Android Studio.
 │   └── app/
 │       └── src/
 │           └── main/
@@ -41,6 +46,7 @@ Expense-Management-Project/
 1. Open `Android-App` in Android Studio.
 2. Sync Gradle and build the project.
 3. Run the app on an emulator or physical device by connect USB with Android phone with enable USB debugging mode.
+4. Build the app on Android Studio to automatically install the app on the connected device.
 
 ### Web App
 1. Navigate to the `Web-App` directory:

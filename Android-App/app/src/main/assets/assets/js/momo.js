@@ -32,11 +32,13 @@ function _addMomoTransaction(amount, type, note, date, timestamp) {
 
   const data = getData();
   const isIncome = type === 'income';
+  const transactionType = isIncome ? 'income' : 'expense';
+  const category = ensureActiveFallbackCategory(data, transactionType);
 
   const tx = {
     id: data.nextId++,
-    type: isIncome ? 'income' : 'expense',
-    category: isIncome ? 'khac_thu' : 'khac_chi',
+    type: transactionType,
+    category,
     amount: amount,
     date: date,
     note: note,
@@ -45,12 +47,13 @@ function _addMomoTransaction(amount, type, note, date, timestamp) {
 
   data.transactions.unshift(tx);
   data.transactions.sort((a, b) => b.date.localeCompare(a.date));
-  saveData(data);
+  saveData(data, { immediate: true });
 
   _momoProcessed.add(timestamp);
   saveMomoDedup();
 
   if (typeof populateFilterOptions === 'function') populateFilterOptions();
+  if (typeof refreshCategoryControls === 'function') refreshCategoryControls();
   if (typeof renderDashboard === 'function') renderDashboard();
 
   const activePage = document.querySelector('.page.active');
