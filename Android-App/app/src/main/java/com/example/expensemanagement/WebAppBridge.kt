@@ -3,9 +3,9 @@ package com.example.expensemanagement
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import android.util.Log
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import org.json.JSONObject
 
 /**
  * JavaScript interface bridging native Android ↔ WebView.
@@ -80,29 +80,24 @@ class WebAppBridge(
     fun setMomoAutoAddEnabled(enabled: Boolean) {
         val prefs = context.getSharedPreferences("momo_prefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("auto_add", enabled).apply()
-        Log.d(TAG, "MoMo auto-add set to: $enabled")
     }
 
     /**
      * Called from native side when a MoMo notification is received.
-     * Injects a JS call on the UI thread.
+     * Injects a JS call on the UI thread using JSONObject.quote for safe JS string escaping.
      */
     fun injectMomoTransaction(amount: Double, type: String, note: String, date: String, timestamp: Long) {
-        // Escape note for JS string
-        val safeNote = note
-            .replace("\\", "\\\\")
-            .replace("'", "\\'")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
+        val safeType = JSONObject.quote(type)
+        val safeNote = JSONObject.quote(note.take(200))
+        val safeDate = JSONObject.quote(date)
 
         val js = """
             (function() {
                 if (typeof window._onMomoTransaction === 'function') {
-                    window._onMomoTransaction($amount, '$type', '$safeNote', '$date', $timestamp);
+                    window._onMomoTransaction($amount, $safeType, $safeNote, $safeDate, $timestamp);
                 } else {
-                    console.warn('MoMo bridge: _onMomoTransaction not defined yet, queuing...');
                     window._momoQueue = window._momoQueue || [];
-                    window._momoQueue.push({amount: $amount, type: '$type', note: '$safeNote', date: '$date', timestamp: $timestamp});
+                    window._momoQueue.push({amount: $amount, type: $safeType, note: $safeNote, date: $safeDate, timestamp: $timestamp});
                 }
             })();
         """.trimIndent()

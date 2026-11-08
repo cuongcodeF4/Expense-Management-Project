@@ -3,7 +3,6 @@ package com.example.expensemanagement
 import android.content.Intent
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -31,7 +30,6 @@ class MomoNotificationService : NotificationListenerService() {
         )
 
         // Regex patterns for Vietnamese MoMo notifications
-        // Matches amounts like "50.000", "1.200.000", "500,000", etc.
         private val AMOUNT_PATTERN = Regex(
             """(?:thanh toán|chuyển tiền|trừ|giao dịch|payment|chi|Số tiền|nhận|đã nhận)[^\d]*?([\d.,]+)\s*(?:đ|VND|dong|đồng)?""",
             RegexOption.IGNORE_CASE
@@ -42,7 +40,6 @@ class MomoNotificationService : NotificationListenerService() {
             """(\d{1,3}(?:[.,]\d{3})+)\s*(?:đ|VND|dong|đồng)?"""
         )
 
-        // Common patterns for successful payment
         private val INCOME_KEYWORDS = listOf(
             "Nhận tiền", "đã nhận", "nhận tiền", "hoàn tiền", "cộng", "received", "added", "refund",
             "nhan tien", "da nhan", "cong tien"
@@ -69,36 +66,19 @@ class MomoNotificationService : NotificationListenerService() {
         val text = extras.getCharSequence("android.text")?.toString() ?: ""
         val bigText = extras.getCharSequence("android.bigText")?.toString() ?: ""
 
-        // Use the longest available text
         val fullText = listOf(bigText, text).maxByOrNull { it.length } ?: text
         val combined = "$title $fullText"
 
-        Log.d(TAG, "MoMo notification: title='$title' text='$fullText'")
-
-        // Check if this is a payment/transaction notification
         val isTransaction = SUCCESS_KEYWORDS.any { combined.contains(it, ignoreCase = true) }
-        if (!isTransaction) {
-            Log.d(TAG, "Skipped: not a transaction notification")
-            return
-        }
+        if (!isTransaction) return
 
-        // Parse amount
         val amount = parseAmount(combined)
-        if (amount <= 0) {
-            Log.d(TAG, "Skipped: could not parse amount from '$combined'")
-            return
-        }
+        if (amount <= 0) return
 
-        // Determine transaction type (income vs expense)
         val type = determineType(combined)
-
-        // Extract note/description (remove amount-related parts)
         val note = extractNote(title, fullText)
         val date = dateFormat.format(Date())
 
-        Log.i(TAG, "Parsed MoMo transaction: amount=$amount, type=$type, note='$note', date=$date")
-
-        // Broadcast to MainActivity
         val intent = Intent(ACTION_MOMO_TRANSACTION).apply {
             setPackage(packageName)
             putExtra(EXTRA_AMOUNT, amount)
@@ -116,28 +96,19 @@ class MomoNotificationService : NotificationListenerService() {
 
     private fun determineType(text: String): String {
         val lowerText = text.lowercase()
-
-        // Check for income keywords first (they are usually more specific)
         if (INCOME_KEYWORDS.any { lowerText.contains(it) }) {
-            // Some "thanh toán" might contain "nhận" (e.g. "nhận được yêu cầu thanh toán" - though unlikely to be success)
-            // But usually "đã nhận" or "nhận từ" is a clear indicator of income.
             return "income"
         }
-
-        // Default to expense for anything that looks like a transaction but isn't clearly income
         return "expense"
     }
 
     private fun parseAmount(text: String): Double {
-        // Try the specific pattern first
         AMOUNT_PATTERN.find(text)?.let { match ->
             return normalizeAmount(match.groupValues[1])
         }
 
-        // Fallback to any VND-like number
         AMOUNT_FALLBACK_PATTERN.findAll(text).toList().let { matches ->
             if (matches.isNotEmpty()) {
-                // Take the largest number (likely the transaction amount)
                 return matches.mapNotNull { normalizeAmountOrNull(it.groupValues[1]) }
                     .maxOrNull() ?: 0.0
             }
@@ -151,19 +122,15 @@ class MomoNotificationService : NotificationListenerService() {
     }
 
     private fun normalizeAmountOrNull(amountStr: String): Double? {
-        // Vietnamese format: 1.000.000 or 1,000,000
-        // Remove all separators and parse
         val cleaned = amountStr.replace(".", "").replace(",", "")
         return cleaned.toDoubleOrNull()
     }
 
     private fun extractNote(title: String, text: String): String {
-        // Try to get a meaningful description
         val parts = mutableListOf<String>()
         if (title.isNotBlank() && !title.equals("MoMo", ignoreCase = true)) {
             parts.add(title)
         }
-        // Truncate text to first sentence or 80 chars
         val shortText = text.split(Regex("[.!\\n]")).firstOrNull()?.trim() ?: ""
         if (shortText.isNotBlank() && shortText != title) {
             parts.add(shortText)

@@ -6,11 +6,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ApplicationInfo
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Message
-import android.util.Log
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
@@ -21,6 +20,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.webkit.WebViewAssetLoader
 
 class MainActivity : AppCompatActivity() {
@@ -35,8 +35,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Enable WebView debugging for Chrome DevTools via chrome://inspect
-        WebView.setWebContentsDebuggingEnabled(true)
+        // Enable WebView debugging ONLY in debuggable builds
+        if ((applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
 
         // Build asset loader to serve local files under https://appassets.androidplatform.net/
         assetLoader = WebViewAssetLoader.Builder()
@@ -70,18 +72,14 @@ class MainActivity : AppCompatActivity() {
                 view: WebView,
                 request: WebResourceRequest
             ): Boolean {
-                val url = request.url.toString()
-                // Let our app domain and Firebase/Google auth URLs load in the WebView
-                if (url.startsWith("https://appassets.androidplatform.net") ||
-                    url.contains("accounts.google.com") ||
-                    url.contains("firebaseapp.com") ||
-                    url.contains("googleapis.com") ||
-                    url.contains("gstatic.com")
-                ) {
+                val uri = request.url
+                if (isAllowedWebViewUrl(uri)) {
                     return false
                 }
-                // Open external URLs in the browser
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                // Open external URLs safely in the system browser
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, uri))
+                } catch (_: Exception) { }
                 return true
             }
         }
@@ -112,7 +110,14 @@ class MainActivity : AppCompatActivity() {
                         view: WebView,
                         request: WebResourceRequest
                     ): Boolean {
-                        return false // Let everything load in the popup
+                        val uri = request.url
+                        if (isAllowedWebViewUrl(uri)) {
+                            return false
+                        }
+                        try {
+                            startActivity(Intent(Intent.ACTION_VIEW, uri))
+                        } catch (_: Exception) { }
+                        return true
                     }
                 }
 
@@ -170,6 +175,22 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    private fun isAllowedWebViewUrl(uri: Uri?): Boolean {
+        val scheme = uri?.scheme?.lowercase() ?: return false
+        val host = uri.host?.lowercase() ?: return false
+        if (scheme != "https") return false
+        return host == "appassets.androidplatform.net" ||
+            host == "accounts.google.com" ||
+            host == "accounts.youtube.com" ||
+            host == "apis.google.com" ||
+            host == "www.gstatic.com" ||
+            host == "ssl.gstatic.com" ||
+            host.endsWith(".google.com") ||
+            host.endsWith(".firebaseapp.com") ||
+            host.endsWith(".googleapis.com") ||
+            host.endsWith(".gstatic.com")
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     private fun configureWebView(wv: WebView) {
         wv.settings.apply {
@@ -178,7 +199,7 @@ class MainActivity : AppCompatActivity() {
             databaseEnabled = true
             setSupportMultipleWindows(true)
             javaScriptCanOpenWindowsAutomatically = true
-            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             allowFileAccess = false
             allowContentAccess = false
             cacheMode = WebSettings.LOAD_DEFAULT
@@ -195,7 +216,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private fun registerMomoReceiver() {
         momoReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -212,18 +232,18 @@ class MainActivity : AppCompatActivity() {
                 val timestamp = intent.getLongExtra(MomoNotificationService.EXTRA_TIMESTAMP, 0)
 
                 if (amount > 0) {
-                    Log.i("MainActivity", "MoMo transaction received: $amount ($type) - $note")
                     bridge.injectMomoTransaction(amount, type, note, date, timestamp)
                 }
             }
         }
 
         val filter = IntentFilter(MomoNotificationService.ACTION_MOMO_TRANSACTION)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(momoReceiver, filter, RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(momoReceiver, filter)
-        }
+        ContextCompat.registerReceiver(
+            this,
+            momoReceiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     override fun onDestroy() {

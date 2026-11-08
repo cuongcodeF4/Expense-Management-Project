@@ -3,7 +3,6 @@ package com.example.expensemanagement
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
-import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import java.text.SimpleDateFormat
@@ -13,12 +12,6 @@ import java.util.Locale
 /**
  * Đọc nội dung màn hình kết quả giao dịch trong MoMo app.
  * Phát hiện khi user chuyển tiền thành công bằng cách xem màn hình.
- *
- * Ví dụ màn hình kết quả MoMo:
- *   "Giao dịch thành công"
- *   "Đến: Nguyễn Văn A"
- *   "50.000 đ"
- *   "12:30, 04/04/2026"
  */
 class MomoAccessibilityService : AccessibilityService() {
 
@@ -31,7 +24,6 @@ class MomoAccessibilityService : AccessibilityService() {
             "com.mservice.momoapp"
         )
 
-        // Từ khóa nhận diện màn hình kết quả giao dịch thành công
         private val SUCCESS_SCREEN_KEYWORDS = listOf(
             "giao dịch thành công",
             "chuyển tiền thành công",
@@ -43,13 +35,11 @@ class MomoAccessibilityService : AccessibilityService() {
             "payment successful"
         )
 
-        // Số tiền: khớp "50.000 đ", "1.200.000đ", "50,000 VND"
         private val AMOUNT_PATTERN = Regex(
             """([\d]{1,3}(?:[.,][\d]{3})+|[\d]{4,})\s*(?:đ\b|d\b|VND|dong|đồng)""",
             RegexOption.IGNORE_CASE
         )
 
-        // Người nhận: "Đến: Nguyễn Văn A" hoặc "Tới Nguyễn Văn A"
         private val RECIPIENT_PATTERN = Regex(
             """(?:đến[:\s]+|den[:\s]+|tới[:\s]+|toi[:\s]+|to[:\s]+)([^\n\d\-]{3,50})""",
             RegexOption.IGNORE_CASE
@@ -58,7 +48,6 @@ class MomoAccessibilityService : AccessibilityService() {
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     }
 
-    // Dedup: tránh broadcast nhiều lần khi Accessibility fire liên tiếp
     private var lastBroadcastKey = ""
     private var lastBroadcastTime = 0L
 
@@ -70,7 +59,6 @@ class MomoAccessibilityService : AccessibilityService() {
             notificationTimeout = 300
             flags = AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
         }
-        Log.i(TAG, "MoMo Accessibility Service connected")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
@@ -90,24 +78,15 @@ class MomoAccessibilityService : AccessibilityService() {
         val allText = collectAllText(root)
         if (allText.isBlank()) return
 
-        Log.d(TAG, "MoMo screen: ${allText.take(150).replace("\n", " | ")}")
-
-        // Kiểm tra đây có phải màn hình kết quả thành công không
         val isSuccess = SUCCESS_SCREEN_KEYWORDS.any { allText.contains(it, ignoreCase = true) }
         if (!isSuccess) return
 
-        // Parse số tiền (lấy số lớn nhất nếu có nhiều)
         val amount = parseAmount(allText)
-        if (amount <= 0) {
-            Log.d(TAG, "Success screen found but no amount")
-            return
-        }
+        if (amount <= 0) return
 
-        // Dedup: tránh broadcast 2 lần trong vòng 15 giây
         val dedupKey = amount.toLong().toString()
         val now = System.currentTimeMillis()
         if (dedupKey == lastBroadcastKey && (now - lastBroadcastTime) < 15_000) {
-            Log.d(TAG, "Dedup skip: amount=$amount same as last, elapsed=${now - lastBroadcastTime}ms")
             return
         }
         lastBroadcastKey = dedupKey
@@ -120,8 +99,6 @@ class MomoAccessibilityService : AccessibilityService() {
             "MoMo: Chuyển tiền thành công"
         }
         val date = dateFormat.format(Date())
-
-        Log.i(TAG, "Accessibility: MoMo transfer detected amount=$amount note='$note'")
 
         val intent = Intent(MomoNotificationService.ACTION_MOMO_TRANSACTION).apply {
             setPackage(packageName)
@@ -158,7 +135,7 @@ class MomoAccessibilityService : AccessibilityService() {
                 val raw = match.groupValues[1].replace(".", "").replace(",", "")
                 raw.toDoubleOrNull()
             }
-            .filter { it >= 1000 } // Bỏ qua số nhỏ không phải tiền
+            .filter { it >= 1000 }
             .maxOrNull() ?: 0.0
     }
 
@@ -167,6 +144,6 @@ class MomoAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() {
-        Log.d(TAG, "MoMo Accessibility Service interrupted")
+        // Service interrupted
     }
 }

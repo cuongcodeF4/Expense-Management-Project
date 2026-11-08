@@ -111,7 +111,7 @@ function normalizeTransactions(rawTransactions) {
       category,
       amount,
       date,
-      note: String(raw.note || '')
+      note: String(raw.note || '').slice(0, 200)
     };
     if (transaction.momoCode != null) transaction.momoCode = String(transaction.momoCode).slice(0, 100);
     normalized.push(transaction);
