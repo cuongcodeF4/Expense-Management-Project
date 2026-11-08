@@ -397,7 +397,7 @@ function renderRemainingBudget() {
     html += '</tr>';
   });
 
-  html += '<tr class="remaining-total-row"><td style="font-weight:800">Total</td>';
+  html += '</tbody><tfoot><tr class="remaining-total-row"><td style="font-weight:800">Total</td>';
   budgetCats.forEach(cat => {
     if (applicableMonths[cat.id] === 0) {
       html += '<td style="text-align:right;font-weight:700;color:var(--text-muted)">—</td>';
@@ -408,9 +408,7 @@ function renderRemainingBudget() {
     const sign = total >= 0 ? '+' : '';
     html += `<td class="sensitive-amount" style="text-align:right;font-weight:800;color:${color}">${sign}${fmtVND(total)}</td>`;
   });
-  html += '</tr>';
-
-  html += '</tbody></table></div>';
+  html += '</tr></tfoot></table></div>';
   container.innerHTML = html;
 }
 

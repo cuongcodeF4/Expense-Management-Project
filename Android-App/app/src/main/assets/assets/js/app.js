@@ -60,6 +60,25 @@ function initUiZoom() {
     }
   } catch(e) {}
   initPinchZoomGesture();
+  initMobileBottomNavScroll();
+}
+
+function initMobileBottomNavScroll() {
+  if (window._mobileBottomNavScrollBound) return;
+  window._mobileBottomNavScrollBound = true;
+  let lastY = window.scrollY || 0;
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('mobile-bottom-nav');
+    if (!nav) return;
+    const curY = window.scrollY || 0;
+    const delta = curY - lastY;
+    if (curY <= 40 || delta < -8) {
+      nav.classList.remove('nav-hidden');
+    } else if (delta > 10 && curY > 60) {
+      nav.classList.add('nav-hidden');
+    }
+    lastY = curY;
+  }, { passive: true });
 }
 
 function initPinchZoomGesture() {
@@ -261,6 +280,7 @@ const pageTitles = {
 };
 
 function navigate(page) {
+  document.getElementById('mobile-bottom-nav')?.classList.remove('nav-hidden');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.mnav-item').forEach(m => m.classList.toggle('active', m.dataset.page === page));

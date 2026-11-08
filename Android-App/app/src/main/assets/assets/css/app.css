@@ -1523,7 +1523,8 @@ tbody tr:last-child td { border-bottom: none; }
 /* ── Remaining Budget Table ── */
 .remaining-budget-table-wrap {
   overflow-x: auto;
-  padding: 6px;
+  padding: 6px 6px 14px;
+  margin-bottom: 24px;
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1576,6 +1577,9 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .remaining-total-row td {
+  background: #040B08;
+  border-top: 2px solid var(--border-strong);
+  border-bottom: none;
   font-size: 13px;
   padding: 12px 14px;
 }
@@ -2126,7 +2130,8 @@ body.light-mode thead th,
 body.light-mode .remaining-budget-table thead th,
 body.light-mode .remaining-budget-table thead th:first-child,
 body.light-mode .remaining-budget-table .remaining-total-row td:first-child,
-body.light-mode .remaining-total-row {
+body.light-mode .remaining-total-row,
+body.light-mode .remaining-total-row td {
   background: #F2F9F6;
   color: #062019;
 }
@@ -2403,10 +2408,17 @@ canvas {
   .sidebar-mobile-user { display: flex; }
 
   #main { margin-left: 0; }
+  #main::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: calc(110px + env(safe-area-inset-bottom, 20px));
+    flex-shrink: 0;
+  }
   #menu-toggle { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; }
 
   .page {
-    padding: 12px 12px 86px;
+    padding: 12px 12px 48px;
   }
 
   /* Single-row sleek Mobile Topbar (never wraps into 2-3 lines) */
@@ -2458,7 +2470,7 @@ canvas {
   }
   #sidebar-overlay.open { display: block; }
 
-  /* Fixed Mobile Bottom Navigation Bar */
+  /* Fixed Mobile Bottom Navigation Bar (Auto-hides on scroll down, shows on scroll up) */
   .mobile-bottom-nav {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -2474,6 +2486,13 @@ canvas {
     border-top: 1px solid rgba(0, 229, 153, 0.22);
     z-index: 95;
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.55);
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+
+  .mobile-bottom-nav.nav-hidden {
+    transform: translateY(105%);
+    pointer-events: none;
   }
 
   .mnav-item {
