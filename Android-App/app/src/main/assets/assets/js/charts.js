@@ -163,7 +163,7 @@ function renderCharts() {
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
+      interaction: { mode: 'index', intersect: false, axis: 'x' },
       plugins: {
         legend: { position: 'top', labels: { color: tickCol, font: { size: 11 }, boxWidth: 10, padding: 14 } },
         tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtVND(ctx.raw)}` } }
@@ -177,6 +177,7 @@ function renderCharts() {
       }
     }
   });
+  if (typeof bindChartTouchInspector === 'function') bindChartTouchInspector(_charts.main);
 
   // Pie chart
   const catTotals = {};
@@ -208,6 +209,7 @@ function renderCharts() {
         }
       }
     });
+    if (typeof bindChartTouchInspector === 'function') bindChartTouchInspector(_charts.pie);
 
     const pieTotal = pieEntries.reduce((s,[,v])=>s+v,0);
     const pieLegend = document.getElementById('pieLegend');
@@ -257,6 +259,7 @@ function renderCharts() {
       },
       options: {
         responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false, axis: 'x' },
         plugins: {
           legend: { position: 'top', labels: { color: tickCol, font: { size: 11 }, boxWidth: 10 } },
           tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtVND(ctx.raw)}` } }
@@ -267,6 +270,7 @@ function renderCharts() {
         }
       }
     });
+    if (typeof bindChartTouchInspector === 'function') bindChartTouchInspector(_charts.compare);
   }
 
   // Saving trend
@@ -301,7 +305,7 @@ function renderCharts() {
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
+        interaction: { mode: 'index', intersect: false, axis: 'x' },
         plugins: {
           legend: { position: 'top', labels: { color: tickCol, font: { size: 11 }, boxWidth: 10 } },
           tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtVND(ctx.raw)}` } }
@@ -318,5 +322,6 @@ function renderCharts() {
         }
       }
     });
+    if (typeof bindChartTouchInspector === 'function') bindChartTouchInspector(_charts.saving);
   }
 }

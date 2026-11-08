@@ -1664,6 +1664,84 @@ tbody tr:last-child td { border-bottom: none; }
 .chart-container {
   position: relative;
   width: 100%;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chart-active-readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  min-height: 32px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: rgba(4, 14, 10, 0.78);
+  border: 1px solid rgba(0, 229, 153, 0.22);
+  font-size: 12px;
+  line-height: 1.4;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.chart-active-readout.active {
+  border-color: var(--border-strong);
+  background: rgba(6, 22, 16, 0.94);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.chart-readout-hint {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.chart-readout-title {
+  font-weight: 800;
+  color: var(--primary-light);
+  font-family: var(--font-mono);
+  padding-right: 4px;
+}
+
+.chart-readout-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.chart-readout-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chart-readout-ds {
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+
+.chart-readout-pct {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+body.light-mode .chart-active-readout {
+  background: #F4FAF7;
+  border-color: rgba(5, 150, 105, 0.22);
+}
+
+body.light-mode .chart-active-readout.active {
+  background: #ECFAF4;
+  border-color: rgba(5, 150, 105, 0.42);
+  box-shadow: 0 4px 12px rgba(6, 32, 25, 0.06);
+}
+
+body.light-mode .chart-readout-title {
+  color: #047857;
 }
 
 /* ── Export / MoMo Grid ── */

@@ -291,7 +291,7 @@ function renderDashDailyChart(data, ym) {
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
+      interaction: { mode: 'index', intersect: false, axis: 'x' },
       plugins: {
         legend: { position: 'top', labels: { color: tickCol, font: { size: 11 }, boxWidth: 10, padding: 12 } },
         tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtVND(ctx.raw)}` } }
@@ -313,6 +313,7 @@ function renderDashDailyChart(data, ym) {
       }
     }
   });
+  if (typeof bindChartTouchInspector === 'function') bindChartTouchInspector(_charts.dashDaily);
 }
 
 function renderDashMiniChart(data, ym) {
@@ -344,9 +345,10 @@ function renderDashMiniChart(data, ym) {
     },
     options: {
       responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false, axis: 'x' },
       plugins: {
         legend: { position: 'top', labels: { color: tickCol, font: { size: 11 }, boxWidth: 10, padding: 12 } },
-        tooltip: { callbacks: { label: ctx => ' ' + fmtVND(ctx.raw) } }
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtVND(ctx.raw)}` } }
       },
       scales: {
         y: { ticks: { color: tickCol, callback: v => (v/1000000).toFixed(0)+'M', font:{size:10} }, grid: { color: gridCol } },
@@ -354,6 +356,7 @@ function renderDashMiniChart(data, ym) {
       }
     }
   });
+  if (typeof bindChartTouchInspector === 'function') bindChartTouchInspector(_charts.dashMini);
 }
 
 function renderDashPieChart(data, ym) {
@@ -392,6 +395,7 @@ function renderDashPieChart(data, ym) {
       }
     }
   });
+  if (typeof bindChartTouchInspector === 'function') bindChartTouchInspector(_charts.dashPie);
 
   const total = entries.reduce((s,[,v])=>s+v,0);
   if (legendEl) {

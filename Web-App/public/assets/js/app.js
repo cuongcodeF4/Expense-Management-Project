@@ -133,6 +133,200 @@ function applyChartThemeDefaults() {
   Chart.defaults.borderColor = isLight ? 'rgba(5, 150, 105, 0.12)' : 'rgba(0, 229, 153, 0.08)';
   Chart.defaults.font.family = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif";
   Chart.defaults.resizeDelay = 120;
+  // Exclude 'mouseout' so Android WebView synthetic mouseout after touchend never hides the tapped bar tooltip
+  Chart.defaults.events = ['mousemove', 'click', 'touchstart', 'touchmove'];
+  if (Chart.defaults.plugins?.tooltip) {
+    Chart.defaults.plugins.tooltip.backgroundColor = isLight ? 'rgba(6, 32, 25, 0.94)' : 'rgba(4, 14, 10, 0.95)';
+    Chart.defaults.plugins.tooltip.titleColor = '#FFFFFF';
+    Chart.defaults.plugins.tooltip.bodyColor = '#E2E8F0';
+    Chart.defaults.plugins.tooltip.borderColor = 'rgba(0, 229, 153, 0.45)';
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+    Chart.defaults.plugins.tooltip.padding = 10;
+    Chart.defaults.plugins.tooltip.cornerRadius = 10;
+    Chart.defaults.plugins.tooltip.boxPadding = 4;
+  }
+}
+
+function bindChartTouchInspector(chart) {
+  if (!chart || !chart.canvas) return;
+  const canvas = chart.canvas;
+  const cardBody = canvas.closest('.card-body');
+  let readout = cardBody ? cardBody.querySelector('.chart-active-readout') : null;
+  if (cardBody && !readout) {
+    readout = document.createElement('div');
+    readout.className = 'chart-active-readout';
+    readout.innerHTML = '<span class="chart-readout-hint">👆 Chạm hoặc vuốt vào cột/biểu đồ để xem chi tiết số tiền</span>';
+    cardBody.insertBefore(readout, cardBody.firstChild);
+  }
+
+  function renderReadoutForIndex(idx, isDoughnut) {
+    if (!readout) return;
+    const labels = chart.data?.labels || [];
+    const rawLabel = labels[idx] !== undefined ? String(labels[idx]) : '';
+    const titleLabel = (canvas.id === 'dashDailyChart' && /^\d+$/.test(rawLabel))
+      ? `Ngày ${rawLabel}`
+      : rawLabel;
+
+    if (isDoughnut) {
+      const ds = chart.data.datasets?.[0];
+      if (!ds) return;
+      const val = Number(ds.data?.[idx] || 0);
+      const total = (ds.data || []).reduce((s, v) => s + Number(v || 0), 0);
+      const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+      const color = Array.isArray(ds.backgroundColor) ? ds.backgroundColor[idx] : (ds.backgroundColor || 'var(--primary)');
+      readout.innerHTML = `
+        <span class="chart-readout-title">${escapeHtml(titleLabel)}</span>
+        <span class="chart-readout-item">
+          <span class="chart-readout-dot" style="background:${color}"></span>
+          <strong class="sensitive-amount">${fmtVND(val)}</strong>
+          <span class="chart-readout-pct">(${pct}%)</span>
+        </span>
+      `;
+      readout.classList.add('active');
+      return;
+    }
+
+    const itemsHtml = [];
+    (chart.data.datasets || []).forEach((ds, dsIdx) => {
+      if (!chart.isDatasetVisible(dsIdx)) return;
+      const val = Number(ds.data?.[idx] || 0);
+      const color = ds.borderColor || (Array.isArray(ds.backgroundColor) ? ds.backgroundColor[idx] : ds.backgroundColor) || 'var(--primary)';
+      itemsHtml.push(`
+        <span class="chart-readout-item">
+          <span class="chart-readout-dot" style="background:${color}"></span>
+          <span class="chart-readout-ds">${escapeHtml(ds.label || '')}:</span>
+          <strong class="sensitive-amount">${fmtVND(val)}</strong>
+        </span>
+      `);
+    });
+
+    if (itemsHtml.length > 0) {
+      readout.innerHTML = `<span class="chart-readout-title">${escapeHtml(titleLabel)}</span>${itemsHtml.join('')}`;
+      readout.classList.add('active');
+    }
+  }
+
+  function handlePointerAt(clientX, clientY) {
+    if (!chart.ctx || !chart.width || !chart.height) return;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    // Zoom-independent coordinate mapping (fixes CSS zoom & WebView scale offset)
+    const relX = ((clientX - rect.left) / rect.width) * chart.width;
+    const relY = ((clientY - rect.top) / rect.height) * chart.height;
+
+    const area = chart.chartArea;
+    if (area && relY < area.top - 2) {
+      // Allow top legend clicks to work normally
+      return;
+    }
+
+    const type = chart.config?.type;
+    if (type === 'doughnut' || type === 'pie') {
+      const meta = chart.getDatasetMeta(0);
+      if (!meta || !meta.data || !meta.data.length) return;
+      const firstArc = meta.data[0];
+      const dx = relX - firstArc.x;
+      const dy = relY - firstArc.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < (firstArc.innerRadius || 0) * 0.6 || dist > (firstArc.outerRadius || 999) * 1.18) return;
+      let angle = Math.atan2(dy, dx);
+      let foundIdx = -1;
+      for (let i = 0; i < meta.data.length; i++) {
+        const arc = meta.data[i];
+        let s = arc.startAngle;
+        let e = arc.endAngle;
+        let a = angle;
+        while (a < s) a += Math.PI * 2;
+        while (a > s + Math.PI * 2) a -= Math.PI * 2;
+        if (a >= s && a <= e) {
+          foundIdx = i;
+          break;
+        }
+      }
+      if (foundIdx >= 0) {
+        const active = [{ datasetIndex: 0, index: foundIdx }];
+        chart.setActiveElements(active);
+        chart.tooltip?.setActiveElements(active, { x: relX, y: relY });
+        chart.update('none');
+        renderReadoutForIndex(foundIdx, true);
+      }
+      return;
+    }
+
+    // Cartesian bar / line chart: snap to nearest column X regardless of bar height
+    let bestIdx = -1;
+    let bestDist = Infinity;
+    let targetX = relX;
+    let targetY = area ? (area.top + area.bottom) / 2 : relY;
+
+    for (let dsIdx = 0; dsIdx < (chart.data.datasets || []).length; dsIdx++) {
+      if (!chart.isDatasetVisible(dsIdx)) continue;
+      const meta = chart.getDatasetMeta(dsIdx);
+      if (!meta?.data?.length) continue;
+      meta.data.forEach((el, idx) => {
+        if (!el || typeof el.x !== 'number' || isNaN(el.x)) return;
+        const d = Math.abs(el.x - relX);
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = idx;
+          targetX = el.x;
+          if (typeof el.y === 'number' && !isNaN(el.y)) {
+            targetY = Math.max((area?.top || 0) + 18, Math.min(el.y, (area?.bottom || chart.height) - 18));
+          }
+        }
+      });
+      if (bestIdx !== -1) break;
+    }
+
+    if (bestIdx === -1) return;
+
+    const active = [];
+    (chart.data.datasets || []).forEach((_, dsIdx) => {
+      if (chart.isDatasetVisible(dsIdx) && chart.getDatasetMeta(dsIdx)?.data?.[bestIdx]) {
+        active.push({ datasetIndex: dsIdx, index: bestIdx });
+      }
+    });
+
+    chart.setActiveElements(active);
+    chart.tooltip?.setActiveElements(active, { x: targetX, y: targetY });
+    chart.update('none');
+    renderReadoutForIndex(bestIdx, false);
+  }
+
+  if (!canvas._touchInspectorBound) {
+    canvas._touchInspectorBound = true;
+    let startX = 0;
+    let startY = 0;
+
+    canvas.addEventListener('touchstart', e => {
+      if (!e.touches || e.touches.length !== 1) return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      if (canvas._activeChartInstance) {
+        canvas._activeChartInstance._handlePointerAt(startX, startY);
+      }
+    }, { passive: true });
+
+    canvas.addEventListener('touchmove', e => {
+      if (!e.touches || e.touches.length !== 1) return;
+      const dx = Math.abs(e.touches[0].clientX - startX);
+      const dy = Math.abs(e.touches[0].clientY - startY);
+      // Update column selection when dragging horizontally across bars
+      if (dx >= dy * 0.7 && canvas._activeChartInstance) {
+        canvas._activeChartInstance._handlePointerAt(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    canvas.addEventListener('click', e => {
+      if (canvas._activeChartInstance) {
+        canvas._activeChartInstance._handlePointerAt(e.clientX, e.clientY);
+      }
+    });
+  }
+
+  chart._handlePointerAt = handlePointerAt;
+  canvas._activeChartInstance = chart;
 }
 
 function updateThemeBtnLabel(isLight) {
