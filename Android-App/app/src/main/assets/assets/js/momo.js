@@ -151,6 +151,8 @@ function initMomoSettings() {
 
 function updateMomoSettingsUI() {
   if (typeof AndroidBridge === 'undefined') return;
+  const momoSection = document.getElementById('momo-settings');
+  if (momoSection) momoSection.style.display = 'block';
 
   const permStatus = document.getElementById('momo-perm-status');
   const permBtn = document.getElementById('momo-perm-btn');
@@ -219,6 +221,8 @@ function openAccessibilitySettings() {
 
 function toggleMomoAutoAdd() {
   if (typeof AndroidBridge === 'undefined') return;
+  const momoSection = document.getElementById('momo-settings');
+  if (momoSection) momoSection.style.display = 'block';
   const current = AndroidBridge.isMomoAutoAddEnabled();
   AndroidBridge.setMomoAutoAddEnabled(!current);
   updateMomoSettingsUI();

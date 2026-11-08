@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════
-//  CHARTS
+//  CHARTS — Genesis FX Markets Analytics Edition
 // ═══════════════════════════════════════════════
 
-const PIE_COLORS = ['#4f46e5','#059669','#dc2626','#d97706','#7c3aed','#0891b2','#db2777','#65a30d','#0d9488','#ea580c'];
+const PIE_COLORS = ['#00E599','#22D3EE','#F59E0B','#F43F5E','#38BDF8','#A855F7','#10B981','#EC4899','#14B8A6','#FB923C'];
 
 function initChartDateRange(months) {
   const now = new Date();
@@ -135,6 +135,11 @@ function renderCharts() {
     savings.push(d.saving);
   });
 
+  const isLight = document.body.classList.contains('light-mode');
+  const tickCol = isLight ? '#475569' : '#94A3B8';
+  const gridCol = isLight ? 'rgba(5, 150, 105, 0.10)' : 'rgba(0, 229, 153, 0.07)';
+  const incCol = isLight ? 'rgba(5, 150, 105, 0.82)' : 'rgba(0, 229, 153, 0.82)';
+
   // Main chart
   const mainCanvas = document.getElementById('mainChart');
   if (!mainCanvas) return;
@@ -145,14 +150,14 @@ function renderCharts() {
     data: {
       labels,
       datasets: [
-        { label: 'Income', data: incomes, backgroundColor: 'rgba(5,150,105,0.65)', borderWidth: 0, borderRadius: 3, order: 2 },
-        { label: 'Expenses', data: expenses, backgroundColor: 'rgba(220,38,38,0.65)', borderWidth: 0, borderRadius: 3, order: 2 },
+        { label: 'Income', data: incomes, backgroundColor: incCol, borderWidth: 0, borderRadius: 4, order: 2 },
+        { label: 'Expenses', data: expenses, backgroundColor: 'rgba(244, 63, 94, 0.78)', borderWidth: 0, borderRadius: 4, order: 2 },
         {
           label: 'Savings', data: savings, type: 'line',
-          borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.06)',
-          pointBackgroundColor: '#7c3aed',
+          borderColor: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.12)',
+          pointBackgroundColor: '#FBBF24',
           pointRadius: totalMonths <= 24 ? 3 : 1.5,
-          tension: 0.35, fill: true, borderWidth: 2, order: 1
+          tension: 0.35, fill: true, borderWidth: 2.2, order: 1
         }
       ]
     },
@@ -160,15 +165,15 @@ function renderCharts() {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 10, padding: 14 } },
+        legend: { position: 'top', labels: { color: tickCol, font: { size: 11 }, boxWidth: 10, padding: 14 } },
         tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtVND(ctx.raw)}` } }
       },
       scales: {
         y: {
-          ticks: { callback: v => v >= 1000000 ? (v/1000000).toFixed(0)+'M' : (v/1000).toFixed(0)+'K', font: { size: 10 } },
-          grid: { color: '#f1f5f9' }
+          ticks: { color: tickCol, callback: v => v >= 1000000 ? (v/1000000).toFixed(0)+'M' : (v/1000).toFixed(0)+'K', font: { size: 10 } },
+          grid: { color: gridCol }
         },
-        x: { ticks: { maxTicksLimit: totalMonths > 24 ? 24 : totalMonths, font: { size: 10 } }, grid: { display: false } }
+        x: { ticks: { color: tickCol, maxTicksLimit: totalMonths > 24 ? 24 : totalMonths, font: { size: 10 } }, grid: { display: false } }
       }
     }
   });
@@ -193,10 +198,10 @@ function renderCharts() {
           const category = getCat(id, 'expense');
           return `${category.icon} ${category.label}`;
         }),
-        datasets: [{ data: pieEntries.map(([,v])=>v), backgroundColor: pieEntries.map((_, i) => PIE_COLORS[i % PIE_COLORS.length]), borderWidth: 2, borderColor: 'white', hoverOffset: 8 }]
+        datasets: [{ data: pieEntries.map(([,v])=>v), backgroundColor: pieEntries.map((_, i) => PIE_COLORS[i % PIE_COLORS.length]), borderWidth: 2, borderColor: isLight ? '#FFFFFF' : '#07130E', hoverOffset: 8 }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false, cutout: '58%',
+        responsive: true, maintainAspectRatio: false, cutout: '60%',
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmtVND(ctx.raw)}` } }
@@ -210,9 +215,9 @@ function renderCharts() {
       pieLegend.innerHTML = pieEntries.map(([id,v],i) => {
         const c = getCat(id, 'expense');
         const color = PIE_COLORS[i % PIE_COLORS.length];
-        return `<div style="display:flex;align-items:center;gap:4px;white-space:nowrap">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0"></span>
-          <span style="font-size:11px">${categoryHtml(c, true)} <strong>${(v/pieTotal*100).toFixed(0)}%</strong></span>
+        return `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${color};box-shadow:0 0 6px ${color};flex-shrink:0"></span>
+          <span style="font-size:11px;color:var(--text)">${categoryHtml(c, true)} <strong>${(v/pieTotal*100).toFixed(0)}%</strong></span>
         </div>`;
       }).join('');
     }
@@ -246,19 +251,19 @@ function renderCharts() {
       data: {
         labels: compareLabels,
         datasets: [
-          { label: 'Income', data: compareInc, backgroundColor: 'rgba(5,150,105,0.7)', borderRadius: 3 },
-          { label: 'Expenses', data: compareExp, backgroundColor: 'rgba(220,38,38,0.7)', borderRadius: 3 },
+          { label: 'Income', data: compareInc, backgroundColor: incCol, borderRadius: 4 },
+          { label: 'Expenses', data: compareExp, backgroundColor: 'rgba(244, 63, 94, 0.78)', borderRadius: 4 },
         ]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 10 } },
+          legend: { position: 'top', labels: { color: tickCol, font: { size: 11 }, boxWidth: 10 } },
           tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtVND(ctx.raw)}` } }
         },
         scales: {
-          y: { ticks: { callback: v => (v/1000000).toFixed(0)+'M', font:{size:10} }, grid: { color: '#f1f5f9' } },
-          x: { ticks: { font:{size:10}, maxTicksLimit: 16 }, grid: { display: false } }
+          y: { ticks: { color: tickCol, callback: v => (v/1000000).toFixed(0)+'M', font:{size:10} }, grid: { color: gridCol } },
+          x: { ticks: { color: tickCol, font:{size:10}, maxTicksLimit: 16 }, grid: { display: false } }
         }
       }
     });
@@ -280,17 +285,17 @@ function renderCharts() {
         datasets: [
           {
             label: 'Monthly net savings', data: savings,
-            borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.06)',
+            borderColor: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.12)',
             fill: true, tension: 0.35, borderWidth: 2,
             pointRadius: totalMonths <= 24 ? 3 : 1,
-            pointBackgroundColor: '#f59e0b', yAxisID: 'y'
+            pointBackgroundColor: '#FBBF24', yAxisID: 'y'
           },
           {
             label: 'Cumulative', data: cumSavings,
-            borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.06)',
+            borderColor: isLight ? '#059669' : '#00E599', backgroundColor: isLight ? 'rgba(5, 150, 105, 0.10)' : 'rgba(0, 229, 153, 0.10)',
             fill: true, tension: 0.35, borderWidth: 2,
             pointRadius: totalMonths <= 24 ? 3 : 1,
-            pointBackgroundColor: '#8b5cf6', yAxisID: 'y'
+            pointBackgroundColor: isLight ? '#059669' : '#00E599', yAxisID: 'y'
           }
         ]
       },
@@ -298,16 +303,16 @@ function renderCharts() {
         responsive: true, maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 10 } },
+          legend: { position: 'top', labels: { color: tickCol, font: { size: 11 }, boxWidth: 10 } },
           tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtVND(ctx.raw)}` } }
         },
         scales: {
           y: {
-            ticks: { callback: v => (v/1000000).toFixed(0)+'M', font:{size:10} },
-            grid: { color: '#f1f5f9' }
+            ticks: { color: tickCol, callback: v => (v/1000000).toFixed(0)+'M', font:{size:10} },
+            grid: { color: gridCol }
           },
           x: {
-            ticks: { maxTicksLimit: totalMonths > 24 ? 24 : totalMonths, font:{size:10} },
+            ticks: { color: tickCol, maxTicksLimit: totalMonths > 24 ? 24 : totalMonths, font:{size:10} },
             grid: { display: false }
           }
         }

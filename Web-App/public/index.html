@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
 <title>Money Tracker</title>
-<link rel="icon" href="/icon-192.svg" type="image/svg+xml">
+<link rel="icon" href="/icon-192.svg?v=19" type="image/svg+xml">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#4f46e5">
+<meta name="theme-color" content="#040A08">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/app.css">
 
 <!-- Firebase SDKs (compat v10) -->
@@ -29,10 +32,26 @@
 <!-- Login Screen -->
 <div id="login-screen" style="display:none">
   <div class="login-card">
-    <h1>Money Tracker</h1>
-    <p>Sign in to sync your financial data across all your devices</p>
+    <div class="login-brand-badge">
+      <svg width="52" height="52" viewBox="0 0 120 120" fill="none">
+        <rect width="120" height="120" rx="28" fill="#040B08"/>
+        <rect x="2" y="2" width="116" height="116" rx="26" stroke="#00E599" stroke-opacity="0.35" stroke-width="2.5"/>
+        <rect x="30" y="24" width="54" height="36" rx="8" transform="rotate(-8 30 24)" fill="url(#loginWalletGrad)"/>
+        <rect x="22" y="38" width="76" height="56" rx="14" fill="#0B2219" stroke="#00E599" stroke-width="3.2"/>
+        <rect x="72" y="56" width="26" height="20" rx="6" fill="url(#loginWalletGrad)"/>
+        <circle cx="81" cy="66" r="3.5" fill="#040B08"/>
+        <defs>
+          <linearGradient id="loginWalletGrad" x1="30" y1="24" x2="84" y2="60" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#22D3EE"/>
+            <stop offset="1" stop-color="#00E599"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <h1>Money <span>Tracker</span></h1>
+    <p>Sign in to sync your financial portfolio across all your devices</p>
     <button id="google-signin-btn" onclick="signIn()">Sign in with Google</button>
-    <p class="login-note">Your data is stored securely on Firebase and is only accessible by you.</p>
+    <p class="login-note">Your data is encrypted and stored securely on Firebase.</p>
   </div>
 </div>
 
@@ -42,29 +61,113 @@
 <!-- Sidebar -->
 <nav id="sidebar">
   <div class="sidebar-header">
-    <div class="sidebar-logo">Money Tracker</div>
-    <div class="sidebar-subtitle">Personal Finance</div>
+    <div class="sidebar-brand-row">
+      <div class="sidebar-brand-logo" title="Money Tracker">
+        <svg width="32" height="32" viewBox="0 0 120 120" fill="none">
+          <rect width="120" height="120" rx="28" fill="#040B08"/>
+          <rect x="3" y="3" width="114" height="114" rx="25" stroke="#00E599" stroke-opacity="0.4" stroke-width="3"/>
+          <rect x="30" y="24" width="54" height="36" rx="8" transform="rotate(-8 30 24)" fill="url(#navWalletGrad)"/>
+          <rect x="22" y="38" width="76" height="56" rx="14" fill="#0B2219" stroke="#00E599" stroke-width="4"/>
+          <rect x="72" y="56" width="26" height="20" rx="6" fill="url(#navWalletGrad)"/>
+          <circle cx="81" cy="66" r="4" fill="#040B08"/>
+          <defs>
+            <linearGradient id="navWalletGrad" x1="30" y1="24" x2="84" y2="60" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#22D3EE"/>
+              <stop offset="1" stop-color="#00E599"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="sidebar-brand-text">
+        <div class="sidebar-logo">Money <span>Tracker</span></div>
+        <div class="sidebar-subtitle">Personal Finance</div>
+      </div>
+      <button type="button" id="sidebar-collapse-btn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse / Expand Sidebar" aria-label="Collapse or expand sidebar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
   </div>
   <div class="sidebar-nav">
     <div class="nav-section">Overview</div>
-    <div class="nav-item active" onclick="navigate('dashboard')">🏠 Dashboard</div>
+    <div class="nav-item active" role="button" tabindex="0" onclick="navigate('dashboard')" title="Dashboard">
+      <span class="nav-item-left">
+        <span class="nav-glyph">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        </span>
+        <span class="nav-label">Dashboard</span>
+      </span>
+      <span class="nav-chevron">›</span>
+    </div>
     <div class="nav-section">Transactions</div>
-    <div class="nav-item" onclick="navigate('add')">➕ Add Transaction</div>
-    <div class="nav-item" onclick="navigate('list')">📋 All Transactions</div>
+    <div class="nav-item" role="button" tabindex="0" onclick="navigate('add')" title="Add Transaction">
+      <span class="nav-item-left">
+        <span class="nav-glyph">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </span>
+        <span class="nav-label">Add Transaction</span>
+      </span>
+      <span class="nav-chevron">›</span>
+    </div>
+    <div class="nav-item" role="button" tabindex="0" onclick="navigate('list')" title="All Transactions">
+      <span class="nav-item-left">
+        <span class="nav-glyph">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </span>
+        <span class="nav-label">All Transactions</span>
+      </span>
+      <span class="nav-chevron">›</span>
+    </div>
     <div class="nav-section">Analytics</div>
-    <div class="nav-item" onclick="navigate('charts')">📊 Charts</div>
-    <div class="nav-item" onclick="navigate('budget')">🎯 Budget</div>
-    <div class="nav-section">Data</div>
-    <div class="nav-item" onclick="navigate('export')">💾 Export / Import</div>
+    <div class="nav-item" role="button" tabindex="0" onclick="navigate('charts')" title="Analytics">
+      <span class="nav-item-left">
+        <span class="nav-glyph">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><polyline points="18 9 13 14 9 10 5 14"/></svg>
+        </span>
+        <span class="nav-label">Analytics</span>
+      </span>
+      <span class="nav-pro-badge">Pro</span>
+    </div>
+    <div class="nav-item" role="button" tabindex="0" onclick="navigate('budget')" title="Monthly Budget">
+      <span class="nav-item-left">
+        <span class="nav-glyph">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21"/></svg>
+        </span>
+        <span class="nav-label">Monthly Budget</span>
+      </span>
+      <span class="nav-chevron">›</span>
+    </div>
+    <div class="nav-section">Data &amp; Sync</div>
+    <div class="nav-item" role="button" tabindex="0" onclick="navigate('export')" title="MoMo &amp; Backup">
+      <span class="nav-item-left">
+        <span class="nav-glyph">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </span>
+        <span class="nav-label">MoMo &amp; Backup</span>
+      </span>
+      <span class="nav-chevron">›</span>
+    </div>
   </div>
-  <div class="sidebar-footer">v2.0 · Firebase Sync</div>
+  <div class="sidebar-mobile-user" id="sidebar-mobile-user">
+    <div class="sidebar-mobile-user-info">
+      <img id="sidebar-user-avatar" src="/icon-192.svg" alt="User avatar">
+      <span id="sidebar-user-name">Signed In</span>
+    </div>
+    <button type="button" class="sidebar-signout-btn" onclick="signOut()">Sign Out</button>
+  </div>
+  <div class="sidebar-footer" title="v2.5 · Firebase Live">
+    <span class="live-status-dot"></span>
+    <span class="sidebar-footer-text">v2.5 · Firebase Live</span>
+  </div>
 </nav>
 
 <!-- Main content -->
 <div id="main">
   <header class="topbar">
-    <div style="display:flex;align-items:center;gap:12px">
-      <button id="menu-toggle" onclick="toggleSidebar()">&#9776;</button>
+    <div class="topbar-left">
+      <button id="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle Menu">&#9776;</button>
+      <span class="topbar-glyph">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </span>
       <div class="topbar-title" id="page-title">Dashboard</div>
     </div>
     <div class="topbar-actions">
@@ -72,10 +175,22 @@
         <div class="sync-dot"></div>
         <span>Saving...</span>
       </div>
+      <div class="topbar-wallet-pill" title="Net Balance (All-Time)">
+        <span class="wallet-label">Wallet</span>
+        <strong id="topbar-wallet-balance" class="sensitive-amount">0 ₫</strong>
+      </div>
       <span class="current-month-label" id="current-month-label"></span>
-      <button class="btn btn-primary" onclick="navigate('add')">+ Add</button>
+      <div class="topbar-zoom-pill" role="group" aria-label="Interface Zoom">
+        <button type="button" class="zoom-step-btn" onclick="adjustUiZoom(-10)" title="Zoom Out" aria-label="Zoom out">−</button>
+        <button type="button" class="zoom-reset-btn" id="ui-zoom-label" onclick="resetUiZoom()" title="Reset Zoom to 100%" aria-label="Reset zoom">100%</button>
+        <button type="button" class="zoom-step-btn" onclick="adjustUiZoom(10)" title="Zoom In" aria-label="Zoom in">+</button>
+      </div>
+      <button type="button" class="btn btn-outline theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Switch Light / Dark Mode" aria-label="Toggle Light or Dark Mode">
+        ☀️ Light
+      </button>
+      <button class="btn btn-primary topbar-add-btn" onclick="navigate('add')">+ Add</button>
       <div class="topbar-user">
-        <img id="user-avatar" src="" alt="avatar">
+        <img id="user-avatar" src="/icon-192.svg" alt="User avatar">
         <span id="user-name"></span>
         <button id="signout-btn" onclick="signOut()">Sign Out</button>
       </div>
@@ -89,17 +204,51 @@
       <span></span>
       <button>Import old data</button>
     </div>
+
+    <!-- Genesis FX Hero Balance & Quick Action Banner -->
+    <div class="gfx-hero-banner">
+      <div class="gfx-hero-left">
+        <div class="gfx-greeting-row">
+          <span id="hero-greeting">Welcome back</span>
+          <button type="button" class="gfx-eye-btn" id="privacy-toggle-btn" onclick="togglePrivacyMask()" title="Hide / Show balances" aria-label="Toggle balance visibility">👁</button>
+        </div>
+        <div class="gfx-balance-row">
+          <span id="hero-balance-value" class="gfx-hero-number sensitive-amount">0 ₫</span>
+          <span class="gfx-currency-tag">VND</span>
+        </div>
+        <div id="hero-balance-delta" class="gfx-delta-row"></div>
+      </div>
+
+      <div class="gfx-hero-actions">
+        <button type="button" class="btn btn-primary gfx-pill-cta" onclick="quickAddTransaction('income')">
+          ↓ Income
+        </button>
+        <button type="button" class="btn btn-outline gfx-pill-action" onclick="quickAddTransaction('expense')">
+          ↑ Expense
+        </button>
+        <button type="button" class="btn btn-outline gfx-pill-action" onclick="navigate('export')">
+          ⇄ MoMo Sync
+        </button>
+        <button type="button" class="btn btn-outline gfx-pill-action" onclick="navigate('budget')">
+          ◎ Budget
+        </button>
+      </div>
+    </div>
+
     <!-- Month selector bar -->
     <div class="dash-month-bar">
-      <label>Period:</label>
+      <label for="dash-month-select">Period:</label>
       <select id="dash-month-select" onchange="onDashMonthChange()"></select>
-      <span id="dash-month-summary" class="month-summary"></span>
+      <span id="dash-month-summary" class="month-summary sensitive-amount"></span>
     </div>
+
+    <!-- 4 Genesis FX Mini-Chart KPI Cards -->
     <div class="summary-grid" id="summary-grid"></div>
+
     <div class="dash-grid">
       <div class="card chart-full">
         <div class="card-header">
-          <div class="card-title">Daily Spending</div>
+          <div class="card-title">Daily Cashflow Pulse</div>
         </div>
         <div class="card-body">
           <div class="chart-container" style="height:220px">
@@ -111,7 +260,7 @@
     <div class="dash-grid">
       <div class="card">
         <div class="card-header">
-          <div class="card-title">6-Month Overview</div>
+          <div class="card-title">6-Month Trajectory</div>
         </div>
         <div class="card-body">
           <div class="chart-container" style="height:220px">
@@ -122,6 +271,7 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">Recent Transactions</div>
+          <button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:12px" onclick="navigate('list')">View All ›</button>
         </div>
         <div class="card-body" id="recent-list" style="padding-top:6px"></div>
       </div>
@@ -132,7 +282,7 @@
           <div class="card-title">Spending by Category</div>
         </div>
         <div class="card-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center">
+          <div class="dash-pie-layout">
             <div class="chart-container" style="height:200px">
               <canvas id="dashPieChart"></canvas>
             </div>
@@ -151,38 +301,38 @@
 
   <!-- ADD TRANSACTION -->
   <div class="page" id="page-add">
-    <div class="section-title">Add Transaction</div>
-    <div class="card" style="max-width:600px">
+    <div class="section-title">Record Transaction</div>
+    <div class="card gfx-card-glow" style="max-width:600px">
       <div class="card-body">
         <form id="tx-form" onsubmit="submitTransaction(event)">
           <div class="form-grid">
             <div class="form-group full">
-              <label>Type</label>
+              <label>Transaction Type</label>
               <div class="type-toggle">
-                <button type="button" class="type-btn income active" id="type-income" onclick="setType('income')">Income</button>
-                <button type="button" class="type-btn expense" id="type-expense" onclick="setType('expense')">Expense</button>
+                <button type="button" class="type-btn income active" id="type-income" onclick="setType('income')">↓ Income</button>
+                <button type="button" class="type-btn expense" id="type-expense" onclick="setType('expense')">↑ Expense</button>
               </div>
             </div>
             <div class="form-group">
-              <label>Amount (VND)</label>
+              <label for="f-amount-display">Amount (VND)</label>
               <input type="text" id="f-amount-display" placeholder="0" required>
               <input type="hidden" id="f-amount">
             </div>
             <div class="form-group">
-              <label>Category</label>
+              <label for="f-category">Category</label>
               <select id="f-category" required></select>
             </div>
             <div class="form-group">
-              <label>Date</label>
+              <label for="f-date">Date</label>
               <input type="date" id="f-date" required>
             </div>
             <div class="form-group">
-              <label>Note</label>
+              <label for="f-note">Note</label>
               <input type="text" id="f-note" placeholder="Enter a note...">
             </div>
-            <div class="form-group full" style="margin-top:4px">
-              <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">
-                Save Transaction
+            <div class="form-group full" style="margin-top:6px">
+              <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px">
+                ✦ Save Transaction
               </button>
             </div>
           </div>
@@ -193,9 +343,9 @@
 
   <!-- TRANSACTION LIST -->
   <div class="page" id="page-list">
-    <div class="section-title">Transactions</div>
+    <div class="section-title">All Transactions</div>
     <div class="filter-bar">
-      <input type="text" id="search-input" placeholder="Search..." oninput="renderList()">
+      <input type="text" id="search-input" placeholder="🔍 Search category, note, or amount..." oninput="renderList()">
       <select id="filter-type" onchange="renderList()">
         <option value="">All types</option>
         <option value="income">Income</option>
@@ -235,7 +385,7 @@
   <div class="page charts-page" id="page-charts">
     <div class="section-title">Charts &amp; Analytics</div>
     <div class="chart-controls-row">
-      <label>Period:</label>
+      <label for="chart-preset">Period:</label>
       <select id="chart-preset" onchange="onPresetChange()">
         <option value="6">6 months</option>
         <option value="12" selected>1 year</option>
@@ -245,16 +395,16 @@
         <option value="0">Custom</option>
       </select>
       <div class="ctrl-sep"></div>
-      <label>From:</label>
+      <label for="chart-date-from">From:</label>
       <input type="date" id="chart-date-from" onchange="onDateRangeChange()">
-      <label>To:</label>
+      <label for="chart-date-to">To:</label>
       <input type="date" id="chart-date-to" onchange="onDateRangeChange()">
       <button class="btn btn-primary" onclick="applyChartRange()" style="padding:6px 14px;font-size:12px">Refresh</button>
     </div>
     <div class="charts-grid">
-      <div class="card chart-full">
+      <div class="card gfx-card-glow chart-full">
         <div class="card-header">
-          <div class="card-title">Income, Expenses &amp; Savings</div>
+          <div class="card-title">Income, Expenses &amp; Net Savings Replay</div>
         </div>
         <div class="card-body">
           <div class="chart-container" style="height:300px">
@@ -270,12 +420,12 @@
           <div class="chart-container" style="height:260px">
             <canvas id="pieChart"></canvas>
           </div>
-          <div id="pieLegend" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;font-size:11px"></div>
+          <div id="pieLegend" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;font-size:12px"></div>
         </div>
       </div>
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Income vs Expenses</div>
+          <div class="card-title">Income vs. Expenses</div>
         </div>
         <div class="card-body">
           <div class="chart-container" style="height:260px">
@@ -285,7 +435,7 @@
       </div>
       <div class="card chart-full">
         <div class="card-header">
-          <div class="card-title">Net Savings Trend</div>
+          <div class="card-title">Net Savings &amp; Cumulative Wealth Trend</div>
         </div>
         <div class="card-body">
           <div class="chart-container" style="height:200px">
@@ -299,7 +449,17 @@
   <!-- BUDGET -->
   <div class="page" id="page-budget">
     <div class="section-title">Monthly Budget</div>
-    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Set spending limits for each expense category. Budgets apply to the current month.</p>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px">Set default spending limits or customize budgets for any specific past month.</p>
+
+    <div class="dash-month-bar">
+      <label for="budget-month-select">Editing Period:</label>
+      <select id="budget-month-select" onchange="onBudgetMonthChange()"></select>
+      <span id="budget-period-hint" style="font-size:12px;color:var(--text-muted)"></span>
+      <button type="button" id="budget-reset-month-btn" class="btn btn-outline" style="display:none;margin-left:auto;padding:5px 12px;font-size:12px" onclick="resetSelectedMonthBudgets()">
+        ↺ Reset Month to Default
+      </button>
+    </div>
+
     <div class="budget-grid" id="budget-grid"></div>
     <div id="budget-total"></div>
 
@@ -334,68 +494,157 @@
     </details>
 
     <div style="margin-top:28px">
-      <div class="section-title">Remaining Budget</div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Monthly surplus/deficit per category. Positive = under budget, negative = over budget. Cumulative total shown at the bottom.</p>
+      <div class="section-title">Remaining Budget Ledger</div>
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">Monthly surplus/deficit per category. Positive = under budget, negative = over budget. <strong>Tip: Click any cell in the table to edit the budget for that specific month &amp; category.</strong></p>
       <div id="remaining-budget-container"></div>
     </div>
   </div>
 
   <!-- EXPORT/IMPORT -->
   <div class="page" id="page-export">
-    <div class="section-title">Export / Import</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:720px">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Export</div></div>
+    <div class="section-title">MoMo Sync &amp; Cloud Backup</div>
+
+    <!-- Native Android MoMo Auto-Import Settings (Shown automatically when running inside Android WebView) -->
+    <div id="momo-settings" class="card gfx-card-glow" style="display:none;max-width:920px;margin-bottom:16px">
+      <div class="card-header"><div class="card-title">📱 MoMo Auto-Import (Android Native Service)</div></div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
+          Automatically capture MoMo transactions on this device. Grant the <b>2 permissions</b> below to enable real-time capture.
+        </p>
+        <div class="momo-settings-rows">
+          <div class="momo-perm-row">
+            <div>
+              <div style="font-size:13px;font-weight:600">Notification Access <span style="font-size:12px;color:var(--text-muted)">(Incoming transfers)</span></div>
+              <div id="momo-perm-status" style="font-size:12px;margin-top:2px">
+                <span style="color:var(--text-muted)">● Checking...</span>
+              </div>
+            </div>
+            <button id="momo-perm-btn" class="btn btn-primary" onclick="openNotifSettings()" style="font-size:12px;padding:6px 14px">
+              Grant Permission
+            </button>
+          </div>
+          <div class="momo-perm-row">
+            <div>
+              <div style="font-size:13px;font-weight:600">Accessibility Service <span style="font-size:12px;color:var(--text-muted)">(Outgoing payments)</span></div>
+              <div id="momo-acc-status" style="font-size:12px;margin-top:2px">
+                <span style="color:var(--text-muted)">● Checking...</span>
+              </div>
+            </div>
+            <button id="momo-acc-btn" class="btn btn-primary" onclick="openAccessibilitySettings()" style="font-size:12px;padding:6px 14px">
+              Grant Permission
+            </button>
+          </div>
+          <div class="momo-perm-row">
+            <div>
+              <div style="font-size:13px;font-weight:600">Auto-Add Transactions</div>
+              <div id="momo-toggle-status" style="font-size:12px;margin-top:2px;color:var(--text-muted)">Loading...</div>
+            </div>
+            <button id="momo-toggle-btn" class="btn btn-outline" onclick="toggleMomoAutoAdd()" style="font-size:12px;padding:6px 14px">
+              Toggle
+            </button>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.6;padding:2px 0">
+            ⓘ Captured transactions are auto-categorized as "Other" and can be edited anytime in All Transactions. Duplicate notifications are filtered automatically.
+          </div>
+          <div class="momo-perm-row">
+            <div>
+              <div style="font-size:13px;font-weight:600">Test Integration</div>
+              <div style="font-size:12px;margin-top:2px;color:var(--text-muted)">Simulate a MoMo notification to verify setup</div>
+            </div>
+            <button class="btn btn-outline" onclick="testMomoTransaction()" style="font-size:12px;padding:6px 14px">
+              Test
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="export-grid">
+      <!-- MoMo Excel Import -->
+      <div class="card gfx-card-glow">
+        <div class="card-header"><div class="card-title">⚡ Auto-Sync MoMo (.xlsx)</div></div>
         <div class="card-body">
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">Download all your transactions, budgets, and categories as a JSON file.</p>
+          <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px">
+            Import transaction history from an exported MoMo Excel statement. Duplicate transactions (by MoMo ID) are skipped automatically.
+          </p>
+          <div class="import-area" onclick="document.getElementById('import-momo-file').click()">
+            <div class="ia-icon">📊</div>
+            <div>Click to upload MoMo .xlsx file</div>
+            <div style="font-size:12px;margin-top:4px;opacity:0.8">Appends new entries without overwriting existing data</div>
+          </div>
+          <input type="file" id="import-momo-file" accept=".xlsx,.xls" style="display:none" onchange="importMomoXlsx(event)">
+          <div style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.6">
+            ⓘ Required columns: <em>Thời gian, Loại giao dịch, Số Tiền, Trạng Thái GD</em>.<br>
+            Entries containing "Nhận / Hoàn / Nạp" are classified as <strong>Income</strong>, others as <strong>Expense</strong>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Export JSON -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">↓ Export Cloud Snapshot</div></div>
+        <div class="card-body">
+          <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px">Download all your transactions, budgets, and categories as a JSON backup file.</p>
           <div id="export-stats" style="margin-bottom:14px;font-size:12px;color:var(--text-muted)"></div>
           <button class="btn btn-primary" onclick="exportData()" style="width:100%;justify-content:center">
-            Download JSON
+            Download JSON Backup
           </button>
         </div>
       </div>
+
+      <!-- Import JSON -->
       <div class="card">
-        <div class="card-header"><div class="card-title">Import</div></div>
+        <div class="card-header"><div class="card-title">↑ Restore from Snapshot</div></div>
         <div class="card-body">
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">Restore data from a previously exported JSON file.</p>
+          <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px">Restore data from a previously exported JSON backup file.</p>
           <div class="import-area" onclick="document.getElementById('import-file').click()">
             <div class="ia-icon">&#8593;</div>
             <div>Click to select JSON file</div>
-            <div style="font-size:11px;margin-top:4px;opacity:0.7">Current data will be replaced</div>
+            <div style="font-size:12px;margin-top:4px;opacity:0.8">Current data will be replaced</div>
           </div>
           <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
         </div>
       </div>
-    </div>
-    <div class="card" style="max-width:720px;margin-top:16px">
-      <div class="card-header"><div class="card-title">Delete Data</div></div>
-      <div class="card-body" style="display:flex;align-items:center;justify-content:space-between">
-        <p style="font-size:13px;color:var(--text-muted)">Permanently delete all transactions, budgets, and custom category settings. This cannot be undone.</p>
-        <button class="btn btn-danger" onclick="clearData()">Delete All</button>
-      </div>
-    </div>
 
-    <!-- MoMo Excel Import -->
-    <div class="card" style="max-width:720px;margin-top:16px">
-      <div class="card-header"><div class="card-title">📱 Import từ MoMo (.xlsx)</div></div>
-      <div class="card-body">
-        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
-          Import lịch sử giao dịch từ file Excel xuất ra từ MoMo. Các giao dịch trùng (theo mã GD) sẽ tự động bỏ qua.
-        </p>
-        <div class="import-area" onclick="document.getElementById('import-momo-file').click()">
-          <div class="ia-icon">📊</div>
-          <div>Click để chọn file .xlsx từ MoMo</div>
-          <div style="font-size:11px;margin-top:4px;opacity:0.7">Chỉ thêm mới, không xoá dữ liệu hiện có</div>
-        </div>
-        <input type="file" id="import-momo-file" accept=".xlsx,.xls" style="display:none" onchange="importMomoXlsx(event)">
-        <div style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.6">
-          ⓘ Các cột cần có: <em>Thời gian, Loại giao dịch, Số Tiền, Trạng Thái GD</em>.<br>
-          Giao dịch chứa "Nhận / Hoàn / Nạp" sẽ được phân loại là <strong>Thu</strong>, còn lại là <strong>Chi</strong>. Category mặc định là "Other" — bạn có thể chỉnh sửa sau.
+      <!-- Danger Zone -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Reset Portfolio Data</div></div>
+        <div class="card-body" style="display:flex;flex-direction:column;justify-content:space-between;gap:14px">
+          <p style="font-size:14px;color:var(--text-muted)">Permanently delete all transactions, budgets, and custom category settings. This cannot be undone.</p>
+          <button class="btn btn-danger" onclick="clearData()" style="width:100%;justify-content:center">Delete All Data</button>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Mobile Bottom Navigation Bar (Phone / Android Viewports <= 740px) -->
+<nav id="mobile-bottom-nav" class="mobile-bottom-nav" aria-label="Mobile Navigation">
+  <button type="button" class="mnav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span>Home</span>
+  </button>
+  <button type="button" class="mnav-item" data-page="list" onclick="navigate('list')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <span>History</span>
+  </button>
+  <button type="button" class="mnav-item mnav-add" data-page="add" onclick="navigate('add')">
+    <span class="mnav-add-circle">+</span>
+    <span>Add</span>
+  </button>
+  <button type="button" class="mnav-item" data-page="charts" onclick="navigate('charts')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><polyline points="18 9 13 14 9 10 5 14"/></svg>
+    <span>Charts</span>
+  </button>
+  <button type="button" class="mnav-item" data-page="budget" onclick="navigate('budget')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21"/></svg>
+    <span>Budget</span>
+  </button>
+  <button type="button" class="mnav-item" data-page="export" onclick="navigate('export')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>MoMo</span>
+  </button>
+</nav>
 
 <!-- Delete/Edit confirmation modal -->
 <div class="modal-overlay" id="delete-modal">

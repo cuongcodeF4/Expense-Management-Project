@@ -83,15 +83,16 @@ function renderList() {
   if (tbody) {
     tbody.innerHTML = txs.map(t => {
       const cat = getCat(t.category, t.type);
-      return `<tr>
-        <td style="white-space:nowrap">${fmtDate(t.date)}</td>
-        <td><span class="badge ${t.type}">${t.type === 'income' ? 'Income' : 'Expense'}</span></td>
-        <td>${categoryHtml(cat, true)}</td>
-        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.note || '\u2014')}</td>
-        <td style="text-align:right;font-weight:600;color:${t.type==='income'?'var(--income-color)':'var(--expense-color)'}">
+      const hasNote = Boolean(t.note && t.note.trim());
+      return `<tr class="tx-row">
+        <td class="td-date" style="white-space:nowrap">${fmtDate(t.date)}</td>
+        <td class="td-type"><span class="badge ${t.type}">${t.type === 'income' ? 'Income' : 'Expense'}</span></td>
+        <td class="td-cat">${categoryHtml(cat, true)}</td>
+        <td class="td-note ${hasNote ? '' : 'td-note-empty'}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.note || '\u2014')}</td>
+        <td class="td-amount sensitive-amount" style="text-align:right;font-weight:700;font-family:var(--font-mono);color:${t.type==='income'?'var(--income-color)':'var(--expense-color)'}">
           ${t.type==='income'?'+':'-'}${fmtVND(t.amount)}
         </td>
-        <td>
+        <td class="td-actions">
           <button class="action-btn" title="Edit" onclick="editTransaction(${t.id})">&#9998;</button>
           <button class="action-btn" title="Delete" onclick="deleteTransaction(${t.id})">&times;</button>
         </td>

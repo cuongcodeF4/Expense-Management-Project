@@ -65,10 +65,14 @@ auth.onAuthStateChanged(user => {
 
     const nameEl = document.getElementById('user-name');
     const avatarEl = document.getElementById('user-avatar');
-    if (nameEl) nameEl.textContent = user.displayName || user.email || '';
-    if (avatarEl && user.photoURL) {
-      avatarEl.src = user.photoURL;
-      avatarEl.style.display = 'block';
+    const sideNameEl = document.getElementById('sidebar-user-name');
+    const sideAvatarEl = document.getElementById('sidebar-user-avatar');
+    const displayName = user.displayName || user.email || 'Signed In';
+    if (nameEl) nameEl.textContent = displayName;
+    if (sideNameEl) sideNameEl.textContent = displayName;
+    if (user.photoURL) {
+      if (avatarEl) { avatarEl.src = user.photoURL; avatarEl.style.display = 'block'; }
+      if (sideAvatarEl) { sideAvatarEl.src = user.photoURL; sideAvatarEl.style.display = 'block'; }
     }
 
     initApp();

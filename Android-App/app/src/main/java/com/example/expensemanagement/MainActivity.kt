@@ -132,14 +132,39 @@ class MainActivity : AppCompatActivity() {
 
         webView.loadUrl("https://appassets.androidplatform.net/index.html")
 
-        // Xử lý nút Back mới cho Android 13+
+        // Xử lý nút Back cho Android 13+ (đóng modal / đóng sidebar / về Dashboard trước khi thoát)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (webView.canGoBack()) {
-                    webView.goBack()
-                } else {
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
+                webView.evaluateJavascript(
+                    """
+                    (function() {
+                      var modal = document.getElementById('delete-modal');
+                      if (modal && modal.classList.contains('open') && typeof closeModal === 'function') {
+                        closeModal();
+                        return 'handled';
+                      }
+                      var sb = document.getElementById('sidebar');
+                      if (sb && sb.classList.contains('open') && typeof closeSidebar === 'function') {
+                        closeSidebar();
+                        return 'handled';
+                      }
+                      var dash = document.getElementById('page-dashboard');
+                      if (dash && !dash.classList.contains('active') && typeof navigate === 'function') {
+                        navigate('dashboard');
+                        return 'handled';
+                      }
+                      return 'exit';
+                    })();
+                    """.trimIndent()
+                ) { result ->
+                    if (result != "\"handled\"") {
+                        if (webView.canGoBack()) {
+                            webView.goBack()
+                        } else {
+                            isEnabled = false
+                            onBackPressedDispatcher.onBackPressed()
+                        }
+                    }
                 }
             }
         })
@@ -159,7 +184,8 @@ class MainActivity : AppCompatActivity() {
             cacheMode = WebSettings.LOAD_DEFAULT
             mediaPlaybackRequiresUserGesture = false
             useWideViewPort = true
-            loadWithOverviewMode = false
+            loadWithOverviewMode = true
+            textZoom = 100
             // Enable zoom in/out
             setSupportZoom(true)
             builtInZoomControls = true

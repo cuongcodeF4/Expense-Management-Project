@@ -50,6 +50,7 @@ function createEmptyAppData() {
     schemaVersion: CATEGORY_SCHEMA_VERSION,
     transactions: [],
     budgets: {},
+    monthlyBudgets: {},
     categories: cloneDefaultCategories(),
     nextId: 1
   };
@@ -130,6 +131,20 @@ function normalizeBudgets(rawBudgets) {
   return normalized;
 }
 
+function normalizeMonthlyBudgets(rawMonthly) {
+  const source = rawMonthly && typeof rawMonthly === 'object' && !Array.isArray(rawMonthly)
+    ? rawMonthly
+    : {};
+  const normalized = {};
+  Object.entries(source).forEach(([ym, monthMap]) => {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(ym || ''))) return;
+    if (!monthMap || typeof monthMap !== 'object' || Array.isArray(monthMap)) return;
+    const cleanMap = normalizeBudgets(monthMap);
+    if (Object.keys(cleanMap).length > 0) normalized[ym] = cleanMap;
+  });
+  return normalized;
+}
+
 function normalizeCategoryEntry(raw, type, order) {
   if (!raw || typeof raw !== 'object') return null;
   const id = String(raw.id || '').trim();
@@ -155,6 +170,7 @@ function normalizeAppData(raw) {
   const data = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
   data.transactions = normalizeTransactions(data.transactions);
   data.budgets = normalizeBudgets(data.budgets);
+  data.monthlyBudgets = normalizeMonthlyBudgets(data.monthlyBudgets);
 
   const hasRegistry = data.categories && typeof data.categories === 'object' && !Array.isArray(data.categories);
   const defaults = cloneDefaultCategories();
@@ -193,7 +209,11 @@ function normalizeAppData(raw) {
   });
 
   // Keep budget-only legacy references recoverable in exports and the restore list.
-  Object.keys(data.budgets).forEach(id => {
+  const budgetReferencedIds = new Set([
+    ...Object.keys(data.budgets),
+    ...Object.values(data.monthlyBudgets).flatMap(m => Object.keys(m))
+  ]);
+  budgetReferencedIds.forEach(id => {
     if (seenIds.has(id)) return;
     seenIds.add(id);
     normalized.expense.push({
@@ -575,4 +595,3 @@ function ensureActiveFallbackCategory(data, type) {
   categories.push(fallback);
   return fallback.id;
 }
-

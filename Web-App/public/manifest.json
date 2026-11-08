@@ -4,8 +4,8 @@
   "description": "Personal finance management app",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#4f46e5",
+  "background_color": "#040A08",
+  "theme_color": "#00E599",
   "icons": [
     {
       "src": "/icon-192.svg",

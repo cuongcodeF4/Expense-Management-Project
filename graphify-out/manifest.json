@@ -1,0 +1,260 @@
+{
+  "Android-App/app/build.gradle.kts": {
+    "mtime": 1775288333.3031826,
+    "seen": 1794126139.2656431,
+    "ast_hash": "f71c1f45500a5c6e842fc82650a857ed",
+    "semantic_hash": "f71c1f45500a5c6e842fc82650a857ed"
+  },
+  "Android-App/app/src/androidTest/java/com/example/expensemanagement/ExampleInstrumentedTest.kt": {
+    "mtime": 1775285629.4315295,
+    "seen": 1794126139.2656431,
+    "ast_hash": "e6a57a69ff3f61b504a5633870412cf5",
+    "semantic_hash": "e6a57a69ff3f61b504a5633870412cf5"
+  },
+  "Android-App/app/src/main/assets/assets/js/app.js": {
+    "mtime": 1794125231.757055,
+    "seen": 1794126139.2656431,
+    "ast_hash": "328e290b12d598279bc1b54c7ae24e7f",
+    "semantic_hash": "328e290b12d598279bc1b54c7ae24e7f"
+  },
+  "Android-App/app/src/main/assets/assets/js/auth.js": {
+    "mtime": 1794125095.7625692,
+    "seen": 1794126139.2656431,
+    "ast_hash": "21d6851a625803fbc77f268c50f0c06d",
+    "semantic_hash": "21d6851a625803fbc77f268c50f0c06d"
+  },
+  "Android-App/app/src/main/assets/assets/js/budget.js": {
+    "mtime": 1794125277.5524633,
+    "seen": 1794126139.2656431,
+    "ast_hash": "c01f535d4ac96d623bc735fd7d351423",
+    "semantic_hash": "c01f535d4ac96d623bc735fd7d351423"
+  },
+  "Android-App/app/src/main/assets/assets/js/categories.js": {
+    "mtime": 1794120521.4409432,
+    "seen": 1794126139.2656431,
+    "ast_hash": "ad062b8720ee55ca8d36c5cca162bb75",
+    "semantic_hash": "ad062b8720ee55ca8d36c5cca162bb75"
+  },
+  "Android-App/app/src/main/assets/assets/js/charts.js": {
+    "mtime": 1794120309.5665545,
+    "seen": 1794126139.2656431,
+    "ast_hash": "fc43248859b314f9efc8b0bbe81a58b6",
+    "semantic_hash": "fc43248859b314f9efc8b0bbe81a58b6"
+  },
+  "Android-App/app/src/main/assets/assets/js/config.js": {
+    "mtime": 1775237967.4974043,
+    "seen": 1794126139.2656431,
+    "ast_hash": "a94e3e73939a98258479e06ae1bf29aa",
+    "semantic_hash": "a94e3e73939a98258479e06ae1bf29aa"
+  },
+  "Android-App/app/src/main/assets/assets/js/dashboard.js": {
+    "mtime": 1794122256.903921,
+    "seen": 1794126139.2656431,
+    "ast_hash": "55d15b9ab2aa0455631e17f452a98eb4",
+    "semantic_hash": "55d15b9ab2aa0455631e17f452a98eb4"
+  },
+  "Android-App/app/src/main/assets/assets/js/dataio.js": {
+    "mtime": 1783793369.0577514,
+    "seen": 1794126139.2656431,
+    "ast_hash": "796bd901fdd2aa1a69b9f3560b75feec",
+    "semantic_hash": "796bd901fdd2aa1a69b9f3560b75feec"
+  },
+  "Android-App/app/src/main/assets/assets/js/db.js": {
+    "mtime": 1783793333.4482305,
+    "seen": 1794126139.2656431,
+    "ast_hash": "a7c7d3e10c6e1c9c154476d01d434ca8",
+    "semantic_hash": "a7c7d3e10c6e1c9c154476d01d434ca8"
+  },
+  "Android-App/app/src/main/assets/assets/js/momo.js": {
+    "mtime": 1794125135.26633,
+    "seen": 1794126139.2656431,
+    "ast_hash": "cec43625155d13473568399beea7fab2",
+    "semantic_hash": "cec43625155d13473568399beea7fab2"
+  },
+  "Android-App/app/src/main/assets/assets/js/transactions.js": {
+    "mtime": 1794125253.01897,
+    "seen": 1794126139.2656431,
+    "ast_hash": "9aabfd9a5533364ed667e617e93a172a",
+    "semantic_hash": "9aabfd9a5533364ed667e617e93a172a"
+  },
+  "Android-App/app/src/main/java/com/example/expensemanagement/Expense.kt": {
+    "mtime": 1775286529.523933,
+    "seen": 1794126139.2656431,
+    "ast_hash": "4cead527ae71c5b5e67812c77eaf732e",
+    "semantic_hash": "4cead527ae71c5b5e67812c77eaf732e"
+  },
+  "Android-App/app/src/main/java/com/example/expensemanagement/ExpenseAdapter.kt": {
+    "mtime": 1775286567.6886134,
+    "seen": 1794126139.2656431,
+    "ast_hash": "aac6638b3c7c20d3f90df5a316a4d663",
+    "semantic_hash": "aac6638b3c7c20d3f90df5a316a4d663"
+  },
+  "Android-App/app/src/main/java/com/example/expensemanagement/MainActivity.kt": {
+    "mtime": 1794125495.6443517,
+    "seen": 1794126139.2656431,
+    "ast_hash": "980f26103c54a2a1dd18446a0940d2c9",
+    "semantic_hash": "980f26103c54a2a1dd18446a0940d2c9"
+  },
+  "Android-App/app/src/main/java/com/example/expensemanagement/MomoAccessibilityService.kt": {
+    "mtime": 1775296040.3654716,
+    "seen": 1794126139.2656431,
+    "ast_hash": "68da0a485a07d9b10b339bc0d876164a",
+    "semantic_hash": "68da0a485a07d9b10b339bc0d876164a"
+  },
+  "Android-App/app/src/main/java/com/example/expensemanagement/MomoNotificationService.kt": {
+    "mtime": 1775349484.0556557,
+    "seen": 1794126139.2656431,
+    "ast_hash": "1f43f9fa8feb128817266606ce1bf3be",
+    "semantic_hash": "1f43f9fa8feb128817266606ce1bf3be"
+  },
+  "Android-App/app/src/main/java/com/example/expensemanagement/WebAppBridge.kt": {
+    "mtime": 1775296526.4969711,
+    "seen": 1794126139.2656431,
+    "ast_hash": "9e4d126cda6124342f0a7ec7ebdceb9b",
+    "semantic_hash": "9e4d126cda6124342f0a7ec7ebdceb9b"
+  },
+  "Android-App/app/src/test/java/com/example/expensemanagement/ExampleUnitTest.kt": {
+    "mtime": 1775285629.3798027,
+    "seen": 1794126139.2656431,
+    "ast_hash": "f939c8d7e12d768bd90d3149106853c8",
+    "semantic_hash": "f939c8d7e12d768bd90d3149106853c8"
+  },
+  "Android-App/build.gradle.kts": {
+    "mtime": 1775285628.6539202,
+    "seen": 1794126139.2656431,
+    "ast_hash": "0d150a90316a3fb424b44e4319a9fed2",
+    "semantic_hash": "0d150a90316a3fb424b44e4319a9fed2"
+  },
+  "Android-App/gradlew": {
+    "mtime": 1775285625.7967618,
+    "seen": 1794126139.2656431,
+    "ast_hash": "266606e78242737ef3da02a80ea0564d",
+    "semantic_hash": "266606e78242737ef3da02a80ea0564d"
+  },
+  "Android-App/settings.gradle.kts": {
+    "mtime": 1775285628.1547558,
+    "seen": 1794126139.2656431,
+    "ast_hash": "88b105f6566578f8c2cf74461b7957f2",
+    "semantic_hash": "88b105f6566578f8c2cf74461b7957f2"
+  },
+  "Web-App/firebase.json": {
+    "mtime": 1794123019.4949112,
+    "seen": 1794126139.2656431,
+    "ast_hash": "c8b7c2b49a9073f64d46816ce7a66a7f",
+    "semantic_hash": "c8b7c2b49a9073f64d46816ce7a66a7f"
+  },
+  "Web-App/firestore.indexes.json": {
+    "mtime": 1775234662.0,
+    "seen": 1794126139.2656431,
+    "ast_hash": "6c1369bcee45fa3baebaaf77f2dc3ae3",
+    "semantic_hash": "6c1369bcee45fa3baebaaf77f2dc3ae3"
+  },
+  "Web-App/public/assets/js/app.js": {
+    "mtime": 1794125231.757055,
+    "seen": 1794126139.2656431,
+    "ast_hash": "328e290b12d598279bc1b54c7ae24e7f",
+    "semantic_hash": "328e290b12d598279bc1b54c7ae24e7f"
+  },
+  "Web-App/public/assets/js/auth.js": {
+    "mtime": 1794125093.423378,
+    "seen": 1794126139.2656431,
+    "ast_hash": "d257dbd33bb031616cb2fa210d731f5e",
+    "semantic_hash": "d257dbd33bb031616cb2fa210d731f5e"
+  },
+  "Web-App/public/assets/js/budget.js": {
+    "mtime": 1794125277.5524633,
+    "seen": 1794126139.2656431,
+    "ast_hash": "c01f535d4ac96d623bc735fd7d351423",
+    "semantic_hash": "c01f535d4ac96d623bc735fd7d351423"
+  },
+  "Web-App/public/assets/js/categories.js": {
+    "mtime": 1794120521.4409432,
+    "seen": 1794126139.2656431,
+    "ast_hash": "ad062b8720ee55ca8d36c5cca162bb75",
+    "semantic_hash": "ad062b8720ee55ca8d36c5cca162bb75"
+  },
+  "Web-App/public/assets/js/charts.js": {
+    "mtime": 1794120309.5665545,
+    "seen": 1794126139.2656431,
+    "ast_hash": "fc43248859b314f9efc8b0bbe81a58b6",
+    "semantic_hash": "fc43248859b314f9efc8b0bbe81a58b6"
+  },
+  "Web-App/public/assets/js/config.js": {
+    "mtime": 1775237967.4974043,
+    "seen": 1794126139.2656431,
+    "ast_hash": "a94e3e73939a98258479e06ae1bf29aa",
+    "semantic_hash": "a94e3e73939a98258479e06ae1bf29aa"
+  },
+  "Web-App/public/assets/js/dashboard.js": {
+    "mtime": 1794122256.903921,
+    "seen": 1794126139.2656431,
+    "ast_hash": "55d15b9ab2aa0455631e17f452a98eb4",
+    "semantic_hash": "55d15b9ab2aa0455631e17f452a98eb4"
+  },
+  "Web-App/public/assets/js/dataio.js": {
+    "mtime": 1783793369.0577514,
+    "seen": 1794126139.2656431,
+    "ast_hash": "796bd901fdd2aa1a69b9f3560b75feec",
+    "semantic_hash": "796bd901fdd2aa1a69b9f3560b75feec"
+  },
+  "Web-App/public/assets/js/db.js": {
+    "mtime": 1783793333.4482305,
+    "seen": 1794126139.2656431,
+    "ast_hash": "a7c7d3e10c6e1c9c154476d01d434ca8",
+    "semantic_hash": "a7c7d3e10c6e1c9c154476d01d434ca8"
+  },
+  "Web-App/public/assets/js/transactions.js": {
+    "mtime": 1794125253.01897,
+    "seen": 1794126139.2656431,
+    "ast_hash": "9aabfd9a5533364ed667e617e93a172a",
+    "semantic_hash": "9aabfd9a5533364ed667e617e93a172a"
+  },
+  "Web-App/public/manifest.json": {
+    "mtime": 1794119750.0472255,
+    "seen": 1794126139.2656431,
+    "ast_hash": "335a41c08ed083a117b55afb9bd4bacc",
+    "semantic_hash": "335a41c08ed083a117b55afb9bd4bacc"
+  },
+  "Web-App/public/sw.js": {
+    "mtime": 1794125529.6595836,
+    "seen": 1794126139.2656431,
+    "ast_hash": "2aead8389947674a442105a911723e1b",
+    "semantic_hash": "2aead8389947674a442105a911723e1b"
+  },
+  "Android-App/app/src/main/assets/index.html": {
+    "mtime": 1794125533.7074363,
+    "seen": 1794126139.2656431,
+    "ast_hash": "bd791cf0ddb43843444dd55958ce2ab9",
+    "semantic_hash": "bd791cf0ddb43843444dd55958ce2ab9"
+  },
+  "CHANGELOG.md": {
+    "mtime": 1783847880.1428642,
+    "seen": 1794126139.2656431,
+    "ast_hash": "1b5dded5bad9526f16840fa6b00043a1",
+    "semantic_hash": "1b5dded5bad9526f16840fa6b00043a1"
+  },
+  "README.md": {
+    "mtime": 1783847032.3425388,
+    "seen": 1794126139.2656431,
+    "ast_hash": "059346d88224022b671e676dabb4e30c",
+    "semantic_hash": "059346d88224022b671e676dabb4e30c"
+  },
+  "Web-App/README.md": {
+    "mtime": 1783761345.5417173,
+    "seen": 1794126139.2656431,
+    "ast_hash": "79f20d7dc19d318511d8672e3b36c29b",
+    "semantic_hash": "79f20d7dc19d318511d8672e3b36c29b"
+  },
+  "Web-App/public/index.html": {
+    "mtime": 1794125074.2436194,
+    "seen": 1794126139.2656431,
+    "ast_hash": "beee27badff4db0da0d680e1153ef50e",
+    "semantic_hash": "beee27badff4db0da0d680e1153ef50e"
+  },
+  "Web-App/public/icon-192.svg": {
+    "mtime": 1794124479.5792794,
+    "seen": 1794126139.2656431,
+    "ast_hash": "acc8ea96f1c1832e2f7eaeaf58988f8c",
+    "semantic_hash": "acc8ea96f1c1832e2f7eaeaf58988f8c"
+  }
+}
