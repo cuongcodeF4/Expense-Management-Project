@@ -262,20 +262,23 @@ function resetSelectedMonthBudgets() {
 //  REMAINING BUDGET TABLE (CLICK CELL TO EDIT)
 // ═══════════════════════════════════════════════
 
+const REMAINING_BUDGET_MIN_YM = '2026-04';
+
 function getRemainingBudgetMonths() {
   const data = getData();
   const now = new Date();
   const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const prevYm = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
+  if (prevYm < REMAINING_BUDGET_MIN_YM) return [];
 
   const pastMonths = new Set([
-    ...(data.transactions || []).map(t => t.date.slice(0, 7)).filter(ym => ym <= prevYm),
-    ...Object.keys(data.monthlyBudgets || {}).filter(ym => ym <= prevYm)
+    ...(data.transactions || []).map(t => t.date.slice(0, 7)).filter(ym => ym >= REMAINING_BUDGET_MIN_YM && ym <= prevYm),
+    ...Object.keys(data.monthlyBudgets || {}).filter(ym => ym >= REMAINING_BUDGET_MIN_YM && ym <= prevYm)
   ]);
   const sortedPast = [...pastMonths].sort();
   if (sortedPast.length === 0) return [];
 
-  const startYm = sortedPast[0];
+  const startYm = sortedPast[0] > REMAINING_BUDGET_MIN_YM ? sortedPast[0] : REMAINING_BUDGET_MIN_YM;
   const months = [];
   const [sy, sm] = startYm.split('-').map(Number);
   const [ey, em] = prevYm.split('-').map(Number);
@@ -290,7 +293,7 @@ function getRemainingBudgetMonths() {
 
 function hasAnyBudgetForCategory(data, catId) {
   if ((data.budgets?.[catId] || 0) > 0) return true;
-  return Object.values(data.monthlyBudgets || {}).some(monthMap => (monthMap?.[catId] || 0) > 0);
+  return Object.entries(data.monthlyBudgets || {}).some(([ym, monthMap]) => ym >= REMAINING_BUDGET_MIN_YM && (monthMap?.[catId] || 0) > 0);
 }
 
 let _ledgerZoomPct = 100;
