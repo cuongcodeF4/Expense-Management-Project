@@ -217,12 +217,12 @@ function renderPortfolioCards(assets) {
 
     return `
       <div class="budget-item portfolio-asset-card ${isSelected ? 'selected' : ''}" data-asset-id="${escapeHtml(asset.id)}">
-        <div class="budget-header">
-          <div class="budget-cat" style="display:flex;align-items:center;gap:8px">
+        <div class="budget-header" style="gap:8px">
+          <div class="budget-cat" style="display:flex;align-items:center;gap:7px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
             <span class="portfolio-color-dot" style="background:${escapeHtml(asset.color || '#00E599')}"></span>
-            <span>${escapeHtml(asset.icon)} ${escapeHtml(asset.name)}</span>
+            <span style="overflow:hidden;text-overflow:ellipsis">${escapeHtml(asset.icon)} ${escapeHtml(asset.name)}</span>
           </div>
-          <div style="display:flex;align-items:center;gap:4px">
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
             <span class="badge ${pnl >= 0 ? 'income' : 'expense'}" style="font-family:var(--font-mono)">${fmtSignedPct(roi)}</span>
             <button type="button" class="action-btn" title="Delete ${escapeHtml(asset.name)}" onclick="deleteInvestmentCategory('${escapeHtml(asset.id)}')">🗑</button>
           </div>
@@ -239,14 +239,14 @@ function renderPortfolioCards(assets) {
 
         <div class="portfolio-quick-inputs">
           <div class="form-group">
-            <label for="inv-init-${escapeHtml(asset.id)}">Initial Invested (VND)</label>
+            <label for="inv-init-${escapeHtml(asset.id)}">Invested (VND)</label>
             <input type="text" inputmode="numeric" id="inv-init-${escapeHtml(asset.id)}"
               value="${inv > 0 ? new Intl.NumberFormat('vi-VN').format(inv) : ''}"
               placeholder="0"
               oninput="formatPortfolioNumericInput(this)">
           </div>
           <div class="form-group">
-            <label for="inv-cur-${escapeHtml(asset.id)}">Current Value (VND)</label>
+            <label for="inv-cur-${escapeHtml(asset.id)}">Current (VND)</label>
             <input type="text" inputmode="numeric" id="inv-cur-${escapeHtml(asset.id)}"
               value="${cur > 0 ? new Intl.NumberFormat('vi-VN').format(cur) : ''}"
               placeholder="0"
@@ -255,10 +255,10 @@ function renderPortfolioCards(assets) {
         </div>
 
         <div class="portfolio-card-actions">
-          <button type="button" class="btn btn-primary" style="flex:1;justify-content:center;padding:8px 12px;font-size:12px" onclick="saveAssetQuickAmounts('${escapeHtml(asset.id)}')">
-            Save Amounts
+          <button type="button" class="btn btn-primary" onclick="saveAssetQuickAmounts('${escapeHtml(asset.id)}')">
+            Save
           </button>
-          <button type="button" class="btn btn-outline" style="flex:1;justify-content:center;padding:8px 12px;font-size:12px" onclick="openInvestmentDetail('${escapeHtml(asset.id)}')">
+          <button type="button" class="btn btn-outline" onclick="openInvestmentDetail('${escapeHtml(asset.id)}')">
             📊 Monthly P&amp;L (${monthCount})
           </button>
         </div>
