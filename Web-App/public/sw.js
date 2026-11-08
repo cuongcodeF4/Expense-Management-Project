@@ -1,4 +1,4 @@
-const CACHE = 'money-v25';
+const CACHE = 'money-v26';
 const ASSETS = [
   '/',
   '/index.html',
@@ -21,7 +21,9 @@ const ASSETS = [
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).catch(err => console.warn('SW cache error:', err))
+    caches.open(CACHE).then(c =>
+      Promise.all(ASSETS.map(url => fetch(url, { cache: 'reload' }).then(res => res.ok ? c.put(url, res) : null)))
+    ).catch(err => console.warn('SW cache error:', err))
   );
   self.skipWaiting();
 });
@@ -30,22 +32,24 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
+// Network-first strategy (falls back to Cache when offline) so iOS/iPadOS/Web always gets the latest version
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   if (!e.request.url.startsWith(self.location.origin)) return;
 
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).then(response => {
-      if (response.ok && e.request.url.startsWith(self.location.origin)) {
-        const clone = response.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-      }
-      return response;
-    }))
+    fetch(e.request, { cache: 'no-cache' })
+      .then(response => {
+        if (response && response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(e.request, { ignoreSearch: true }))
   );
 });
