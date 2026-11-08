@@ -184,6 +184,7 @@ function refreshAllUI() {
   if (typeof refreshCategoryControls === 'function') refreshCategoryControls();
   if (typeof renderDashboard === 'function') renderDashboard();
   if (typeof renderBudget === 'function') renderBudget();
+  if (typeof renderPortfolio === 'function') renderPortfolio();
   if (typeof renderExportStats === 'function') renderExportStats();
   if (typeof populateDashMonthSelect === 'function') populateDashMonthSelect();
   if (typeof populateFilterOptions === 'function') {

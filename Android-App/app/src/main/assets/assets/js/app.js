@@ -356,6 +356,7 @@ function toggleTheme() {
   if (typeof renderDashboard === 'function') renderDashboard();
   const activePage = document.querySelector('.page.active');
   if (activePage?.id === 'page-charts' && typeof renderCharts === 'function') renderCharts();
+  if (activePage?.id === 'page-portfolio' && typeof renderPortfolio === 'function') renderPortfolio();
 }
 
 // Init theme, sidebar & zoom immediately on script load
@@ -386,6 +387,7 @@ async function initApp() {
   populateDashMonthSelect();
   renderDashboard();
   renderBudget();
+  if (typeof renderPortfolio === 'function') renderPortfolio();
   renderExportStats();
 
   // Initialize MoMo settings UI (Android WebView bridge when available)
@@ -470,6 +472,7 @@ const pageTitles = {
   list: 'Transactions',
   charts: 'Charts & Analytics',
   budget: 'Monthly Budget',
+  portfolio: 'Investment Portfolio',
   export: 'MoMo Sync & Backup',
 };
 
@@ -489,6 +492,7 @@ function navigate(page) {
   if (page === 'list') renderList();
   if (page === 'charts') renderCharts();
   if (page === 'budget') renderBudget();
+  if (page === 'portfolio' && typeof renderPortfolio === 'function') renderPortfolio();
   if (page === 'export') { renderExportStats(); if (typeof initMomoSettings === 'function') initMomoSettings(); }
   if (page === 'dashboard') renderDashboard();
 }

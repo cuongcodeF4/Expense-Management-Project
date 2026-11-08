@@ -136,6 +136,15 @@
       </span>
       <span class="nav-chevron">›</span>
     </div>
+    <div class="nav-item" role="button" tabindex="0" onclick="navigate('portfolio')" title="Investment Portfolio">
+      <span class="nav-item-left">
+        <span class="nav-glyph">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        </span>
+        <span class="nav-label">Investment Portfolio</span>
+      </span>
+      <span class="nav-chevron">›</span>
+    </div>
     <div class="nav-section">Data &amp; Sync</div>
     <div class="nav-item" role="button" tabindex="0" onclick="navigate('export')" title="MoMo &amp; Backup">
       <span class="nav-item-left">
@@ -500,6 +509,178 @@
     </div>
   </div>
 
+  <!-- INVESTMENT PORTFOLIO -->
+  <div class="page" id="page-portfolio">
+    <div class="section-title">Investment Portfolio</div>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">
+      Track your investments across Gold, Bitcoin (BTC), Mutual Funds / ETFs, Stocks, and custom assets. Edit amounts directly or tap any asset to log monthly valuations &amp; inspect ROI (%) trends.
+    </p>
+
+    <!-- Portfolio KPI Summary Cards -->
+    <div class="summary-grid" id="portfolio-kpi-grid"></div>
+
+    <!-- Add / Manage Investment Categories -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-header">
+        <div class="card-title">Add Investment Category</div>
+        <button type="button" class="btn btn-outline" style="padding:5px 12px;font-size:12px" onclick="restoreDefaultInvestments()">↺ Restore Defaults</button>
+      </div>
+      <div class="card-body">
+        <form id="portfolio-add-form" class="portfolio-add-form" onsubmit="addInvestmentCategory(event)" autocomplete="off">
+          <div class="form-group">
+            <label for="new-inv-icon">Icon</label>
+            <input type="text" id="new-inv-icon" maxlength="8" placeholder="🪙">
+          </div>
+          <div class="form-group">
+            <label for="new-inv-name">Category Name</label>
+            <input type="text" id="new-inv-name" maxlength="50" placeholder="e.g. Gold, BTC, VFMVF4 ETF..." required>
+          </div>
+          <div class="form-group">
+            <label for="new-inv-initial">Initial Invested (VND)</label>
+            <input type="text" inputmode="numeric" id="new-inv-initial" placeholder="0" oninput="formatPortfolioNumericInput(this)">
+          </div>
+          <div class="form-group">
+            <label for="new-inv-current">Current Value (VND)</label>
+            <input type="text" inputmode="numeric" id="new-inv-current" placeholder="0" oninput="formatPortfolioNumericInput(this)">
+          </div>
+          <button type="submit" class="btn btn-primary portfolio-add-btn">+ Add Asset</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Investment Categories Grid -->
+    <div class="budget-grid" id="portfolio-assets-grid" style="margin-bottom:22px"></div>
+
+    <!-- Selected Asset Detail & Monthly ROI (%) Panel -->
+    <div class="card gfx-card-glow" id="portfolio-detail-card" style="margin-bottom:22px;display:none">
+      <div class="card-header" style="flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div class="card-title">Asset Monthly Valuation &amp; ROI (%)</div>
+          <select id="detail-asset-select" onchange="onSelectDetailAssetChange(this)" style="padding:5px 12px;border-radius:999px;font-size:13px;font-weight:700"></select>
+        </div>
+        <div id="detail-asset-summary-badge" class="portfolio-detail-badges"></div>
+      </div>
+      <div class="card-body">
+        <form class="portfolio-monthly-form" onsubmit="saveAssetMonthlyRecord(event)" autocomplete="off">
+          <div class="form-group">
+            <label for="detail-initial-input">Initial Invested Capital (VND)</label>
+            <input type="text" inputmode="numeric" id="detail-initial-input" placeholder="0" oninput="formatPortfolioNumericInput(this)" required>
+          </div>
+          <div class="form-group">
+            <label for="detail-month-input">Valuation Month</label>
+            <input type="month" id="detail-month-input" onchange="onDetailMonthPickerChange()" required>
+          </div>
+          <div class="form-group">
+            <label for="detail-month-current-input">Current Value in Month (VND)</label>
+            <input type="text" inputmode="numeric" id="detail-month-current-input" placeholder="0" oninput="formatPortfolioNumericInput(this)" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="min-height:40px;justify-content:center;white-space:nowrap">Save Monthly Valuation</button>
+        </form>
+
+        <div class="charts-grid" style="margin-top:16px">
+          <div class="card" style="box-shadow:none">
+            <div class="card-header">
+              <div class="card-title">Selected Asset Profit / Loss (%) Curve</div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:240px">
+                <canvas id="assetDetailChart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="box-shadow:none">
+            <div class="card-header">
+              <div class="card-title">Monthly Valuation History</div>
+            </div>
+            <div class="card-body">
+              <div class="remaining-budget-table-wrap" style="margin-bottom:0;max-height:260px;overflow-y:auto">
+                <table class="remaining-budget-table">
+                  <thead>
+                    <tr>
+                      <th>Month</th>
+                      <th style="text-align:right">Invested</th>
+                      <th style="text-align:right">Market Value</th>
+                      <th style="text-align:right">Profit / Loss</th>
+                      <th style="text-align:right">ROI (%)</th>
+                      <th style="text-align:right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="detail-monthly-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overall Multi-Line Monthly Profit / Loss (%) Chart Across All Categories -->
+    <div class="card gfx-card-glow" style="margin-bottom:22px">
+      <div class="card-header" style="flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="card-title">All Assets Monthly Profit / Loss (%) Comparison</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Multi-line monthly ROI (%) trajectory across all investment categories</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label for="portfolio-chart-range" style="font-size:11px;margin:0">Horizon:</label>
+          <select id="portfolio-chart-range" onchange="renderPortfolio()" style="padding:5px 10px;border-radius:999px;font-size:12px">
+            <option value="6">6 months</option>
+            <option value="12" selected>12 months</option>
+            <option value="24">24 months</option>
+            <option value="0">All recorded months</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-container" style="height:300px">
+          <canvas id="portfolioMultiLineChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Portfolio Allocation Breakdown Table & Doughnut Chart -->
+    <div class="charts-grid">
+      <div class="card chart-full">
+        <div class="card-header">
+          <div class="card-title">Portfolio Allocation &amp; ROI Breakdown</div>
+        </div>
+        <div class="card-body">
+          <div class="remaining-budget-table-wrap" style="margin-bottom:0">
+            <table class="remaining-budget-table">
+              <thead>
+                <tr>
+                  <th>Investment Category</th>
+                  <th style="text-align:right">Initial Invested</th>
+                  <th style="text-align:right">Current Value</th>
+                  <th style="text-align:right">Net Profit / Loss</th>
+                  <th style="text-align:right">ROI (%)</th>
+                  <th style="text-align:right">% of Total Portfolio</th>
+                  <th style="text-align:right">Detail</th>
+                </tr>
+              </thead>
+              <tbody id="portfolio-alloc-tbody"></tbody>
+              <tfoot id="portfolio-alloc-tfoot"></tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card chart-full">
+        <div class="card-header">
+          <div class="card-title">Visual Portfolio Weight (%)</div>
+        </div>
+        <div class="card-body">
+          <div class="dash-pie-layout">
+            <div class="chart-container" style="height:220px">
+              <canvas id="portfolioAllocChart"></canvas>
+            </div>
+            <div id="portfolioAllocLegend" style="font-size:12px;display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- EXPORT/IMPORT -->
   <div class="page" id="page-export">
     <div class="section-title">MoMo Sync &amp; Cloud Backup</div>
@@ -640,6 +821,10 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21"/></svg>
     <span>Budget</span>
   </button>
+  <button type="button" class="mnav-item" data-page="portfolio" onclick="navigate('portfolio')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+    <span>Invest</span>
+  </button>
   <button type="button" class="mnav-item" data-page="export" onclick="navigate('export')">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     <span>MoMo</span>
@@ -679,6 +864,7 @@
 <script src="/assets/js/transactions.js"></script>
 <script src="/assets/js/charts.js"></script>
 <script src="/assets/js/budget.js"></script>
+<script src="/assets/js/portfolio.js"></script>
 <script src="/assets/js/dataio.js"></script>
 
 <script src="/assets/js/momo.js"></script>

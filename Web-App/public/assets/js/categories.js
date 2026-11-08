@@ -30,6 +30,83 @@ const DEFAULT_CATEGORIES = {
   ]
 };
 
+const DEFAULT_INVESTMENTS = [
+  { id: 'gold',            name: 'Gold',              icon: '🪙', color: '#F59E0B' },
+  { id: 'btc',             name: 'Bitcoin (BTC)',     icon: '₿',  color: '#FB923C' },
+  { id: 'mutual_fund',     name: 'Mutual Fund / ETF', icon: '📊', color: '#00E599' },
+  { id: 'stocks',          name: 'Stocks',            icon: '📈', color: '#22D3EE' },
+  { id: 'savings_deposit', name: 'Term Deposit',      icon: '🏦', color: '#A855F7' },
+  { id: 'real_estate',     name: 'Real Estate',       icon: '🏢', color: '#EC4899' }
+];
+
+function cloneDefaultInvestments() {
+  return DEFAULT_INVESTMENTS.map((item, idx) => ({
+    id: item.id,
+    name: item.name,
+    icon: item.icon,
+    color: item.color,
+    initialAmount: 0,
+    currentAmount: 0,
+    monthlyHistory: {},
+    order: idx
+  }));
+}
+
+function normalizeInvestments(rawInvestments) {
+  if (!Array.isArray(rawInvestments)) {
+    return cloneDefaultInvestments();
+  }
+  const palette = ['#00E599', '#22D3EE', '#F59E0B', '#FB923C', '#A855F7', '#EC4899', '#38BDF8', '#10B981', '#F43F5E', '#14B8A6'];
+  const seen = new Set();
+  const list = [];
+
+  rawInvestments.slice(0, 100).forEach((raw, idx) => {
+    if (!raw || typeof raw !== 'object') return;
+    const id = String(raw.id || '').trim();
+    if (!isSafeCategoryId(id) || seen.has(id)) return;
+    seen.add(id);
+
+    const name = String(raw.name || id).trim().slice(0, 50) || id.slice(0, 50);
+    const iconChars = Array.from(String(raw.icon || '💎').trim());
+    const icon = iconChars.length ? iconChars.slice(0, 8).join('') : '💎';
+    const color = /^#[0-9A-Fa-f]{6}$/.test(String(raw.color || ''))
+      ? String(raw.color)
+      : palette[idx % palette.length];
+
+    const initialAmount = Math.max(0, Number.isFinite(Number(raw.initialAmount)) ? Math.round(Number(raw.initialAmount)) : 0);
+    const currentAmount = Math.max(0, Number.isFinite(Number(raw.currentAmount)) ? Math.round(Number(raw.currentAmount)) : 0);
+
+    const monthlyHistory = {};
+    if (raw.monthlyHistory && typeof raw.monthlyHistory === 'object' && !Array.isArray(raw.monthlyHistory)) {
+      Object.entries(raw.monthlyHistory).forEach(([ym, entry]) => {
+        if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(ym || ''))) return;
+        if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+          const cur = Math.max(0, Number.isFinite(Number(entry.current)) ? Math.round(Number(entry.current)) : 0);
+          const inv = Number.isFinite(Number(entry.invested)) && Number(entry.invested) >= 0
+            ? Math.round(Number(entry.invested))
+            : null;
+          monthlyHistory[ym] = inv !== null ? { current: cur, invested: inv } : { current: cur };
+        } else if (Number.isFinite(Number(entry)) && Number(entry) >= 0) {
+          monthlyHistory[ym] = { current: Math.round(Number(entry)) };
+        }
+      });
+    }
+
+    list.push({
+      id,
+      name,
+      icon,
+      color,
+      initialAmount,
+      currentAmount,
+      monthlyHistory,
+      order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : idx
+    });
+  });
+
+  return list;
+}
+
 function cloneDefaultCategories() {
   const categories = { income: [], expense: [] };
   CATEGORY_TYPES.forEach(type => {
@@ -52,6 +129,7 @@ function createEmptyAppData() {
     budgets: {},
     monthlyBudgets: {},
     categories: cloneDefaultCategories(),
+    investments: cloneDefaultInvestments(),
     nextId: 1
   };
 }
@@ -229,6 +307,7 @@ function normalizeAppData(raw) {
   });
 
   data.categories = normalized;
+  data.investments = normalizeInvestments(data.investments);
   data.schemaVersion = CATEGORY_SCHEMA_VERSION;
 
   const maxId = data.transactions.reduce((max, transaction) => Math.max(max, transaction.id), 0);

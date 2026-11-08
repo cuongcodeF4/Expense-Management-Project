@@ -1,4 +1,4 @@
-const CACHE = 'money-v23';
+const CACHE = 'money-v24';
 const ASSETS = [
   '/',
   '/index.html',
@@ -15,6 +15,7 @@ const ASSETS = [
   '/assets/js/transactions.js',
   '/assets/js/charts.js',
   '/assets/js/budget.js',
+  '/assets/js/portfolio.js',
   '/assets/js/dataio.js'
 ];
 

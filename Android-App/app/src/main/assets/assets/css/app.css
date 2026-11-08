@@ -1602,6 +1602,111 @@ tbody tr:last-child td { border-bottom: none; }
   vertical-align: super;
 }
 
+/* ── Investment Portfolio Tab ── */
+.portfolio-add-form {
+  display: grid;
+  grid-template-columns: 80px minmax(160px, 1.4fr) 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.portfolio-add-form .form-group { min-width: 0; }
+.portfolio-add-form input { width: 100%; }
+
+.portfolio-add-btn {
+  min-height: 40px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.portfolio-asset-card {
+  transition: border-color 0.16s, box-shadow 0.16s, transform 0.16s;
+}
+
+.portfolio-asset-card.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary), var(--shadow);
+}
+
+.portfolio-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.portfolio-quick-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.portfolio-quick-inputs label {
+  font-size: 10px;
+}
+
+.portfolio-quick-inputs input {
+  width: 100%;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+.portfolio-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.portfolio-monthly-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.portfolio-monthly-form .form-group { min-width: 0; }
+.portfolio-monthly-form input {
+  width: 100%;
+  font-family: var(--font-mono);
+}
+
+.portfolio-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.portfolio-detail-badges strong {
+  color: var(--text);
+}
+
+@media (max-width: 1100px) {
+  .portfolio-add-form,
+  .portfolio-monthly-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .portfolio-add-btn,
+  .portfolio-monthly-form .btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .portfolio-quick-inputs {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Charts & Period Controls ── */
 .chart-controls-row,
 .dash-month-bar {
@@ -2551,14 +2656,14 @@ canvas {
   /* Fixed Mobile Bottom Navigation Bar (Auto-hides on scroll down, shows on scroll up) */
   .mobile-bottom-nav {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     align-items: center;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     height: 62px;
-    padding: 4px 6px env(safe-area-inset-bottom, 4px);
+    padding: 4px 4px env(safe-area-inset-bottom, 4px);
     background: rgba(4, 11, 8, 0.94);
     backdrop-filter: blur(16px);
     border-top: 1px solid rgba(0, 229, 153, 0.22);
