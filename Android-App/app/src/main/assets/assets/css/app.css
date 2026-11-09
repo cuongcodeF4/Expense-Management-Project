@@ -54,15 +54,15 @@ body {
 
 /* Privacy Mask Mode (Toggled via Eye Button on Hero Banner) */
 body.privacy-masked .sensitive-amount {
-  filter: blur(18px);
-  opacity: 0.18;
+  filter: blur(11px);
+  opacity: 0.92;
   user-select: none;
   pointer-events: none;
   transition: filter 0.2s ease, opacity 0.2s ease;
 }
 body.privacy-masked .gfx-hero-number.sensitive-amount {
-  filter: blur(22px);
-  opacity: 0.15;
+  filter: blur(14px);
+  opacity: 0.92;
 }
 .sensitive-amount {
   transition: filter 0.2s ease, opacity 0.2s ease;
