@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/app.css?v=29">
+<link rel="stylesheet" href="/assets/css/app.css?v=30">
 
 <!-- Firebase SDKs (compat v10) -->
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -197,6 +197,7 @@
       <button type="button" class="btn btn-outline theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Switch Light / Dark Mode" aria-label="Toggle Light or Dark Mode">
         ☀️ Light
       </button>
+      <button type="button" class="btn btn-outline tour-trigger-btn" id="tour-trigger-btn" onclick="startOnboardingTour(true)" title="Hướng dẫn sử dụng (App Tour)" aria-label="Hướng dẫn sử dụng">?</button>
       <button class="btn btn-primary topbar-add-btn" onclick="navigate('add')">+ Add</button>
       <div class="topbar-user">
         <img id="user-avatar" src="/icon-192.svg" alt="User avatar">
@@ -842,6 +843,26 @@
   </div>
 </div>
 
+<!-- Interactive Spotlight Onboarding Tour -->
+<div id="onboarding-tour" class="tour-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+  <div id="tour-spotlight" class="tour-spotlight"></div>
+  <div id="tour-card" class="tour-card">
+    <div class="tour-card-header">
+      <span id="tour-step-badge" class="tour-step-badge">1 / 9</span>
+      <button type="button" class="tour-skip-btn" onclick="endOnboardingTour()">Bỏ qua ✕</button>
+    </div>
+    <div id="tour-title" class="tour-title"></div>
+    <div id="tour-desc" class="tour-desc"></div>
+    <div class="tour-card-footer">
+      <div id="tour-dots" class="tour-dots"></div>
+      <div class="tour-nav-btns">
+        <button type="button" id="tour-prev-btn" class="btn btn-outline tour-nav-btn" onclick="stepOnboardingTour(-1)">‹ Trước</button>
+        <button type="button" id="tour-next-btn" class="btn btn-primary tour-nav-btn" onclick="stepOnboardingTour(1)">Tiếp ›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Toast container -->
 <div id="toast-container" aria-live="polite"></div>
 
@@ -849,17 +870,17 @@
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
 
 <!-- App scripts -->
-<script src="/assets/js/config.js?v=28"></script>
-<script src="/assets/js/auth.js?v=28"></script>
-<script src="/assets/js/categories.js?v=28"></script>
-<script src="/assets/js/db.js?v=28"></script>
-<script src="/assets/js/app.js?v=28"></script>
-<script src="/assets/js/dashboard.js?v=28"></script>
-<script src="/assets/js/transactions.js?v=28"></script>
-<script src="/assets/js/charts.js?v=28"></script>
-<script src="/assets/js/budget.js?v=28"></script>
-<script src="/assets/js/portfolio.js?v=28"></script>
-<script src="/assets/js/dataio.js?v=28"></script>
+<script src="/assets/js/config.js?v=30"></script>
+<script src="/assets/js/auth.js?v=30"></script>
+<script src="/assets/js/categories.js?v=30"></script>
+<script src="/assets/js/db.js?v=30"></script>
+<script src="/assets/js/app.js?v=30"></script>
+<script src="/assets/js/dashboard.js?v=30"></script>
+<script src="/assets/js/transactions.js?v=30"></script>
+<script src="/assets/js/charts.js?v=30"></script>
+<script src="/assets/js/budget.js?v=30"></script>
+<script src="/assets/js/portfolio.js?v=30"></script>
+<script src="/assets/js/dataio.js?v=30"></script>
 
 <!-- Service Worker Registration -->
 <script>

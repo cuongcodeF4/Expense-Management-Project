@@ -197,6 +197,7 @@
       <button type="button" class="btn btn-outline theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Switch Light / Dark Mode" aria-label="Toggle Light or Dark Mode">
         ☀️ Light
       </button>
+      <button type="button" class="btn btn-outline tour-trigger-btn" id="tour-trigger-btn" onclick="startOnboardingTour(true)" title="Hướng dẫn sử dụng (App Tour)" aria-label="Hướng dẫn sử dụng">?</button>
       <button class="btn btn-primary topbar-add-btn" onclick="navigate('add')">+ Add</button>
       <div class="topbar-user">
         <img id="user-avatar" src="/icon-192.svg" alt="User avatar">
@@ -838,6 +839,26 @@
     <div class="modal-footer" id="modal-footer">
       <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
       <button class="btn btn-danger" id="confirm-delete-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Interactive Spotlight Onboarding Tour -->
+<div id="onboarding-tour" class="tour-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+  <div id="tour-spotlight" class="tour-spotlight"></div>
+  <div id="tour-card" class="tour-card">
+    <div class="tour-card-header">
+      <span id="tour-step-badge" class="tour-step-badge">1 / 9</span>
+      <button type="button" class="tour-skip-btn" onclick="endOnboardingTour()">Bỏ qua ✕</button>
+    </div>
+    <div id="tour-title" class="tour-title"></div>
+    <div id="tour-desc" class="tour-desc"></div>
+    <div class="tour-card-footer">
+      <div id="tour-dots" class="tour-dots"></div>
+      <div class="tour-nav-btns">
+        <button type="button" id="tour-prev-btn" class="btn btn-outline tour-nav-btn" onclick="stepOnboardingTour(-1)">‹ Trước</button>
+        <button type="button" id="tour-next-btn" class="btn btn-primary tour-nav-btn" onclick="stepOnboardingTour(1)">Tiếp ›</button>
+      </div>
     </div>
   </div>
 </div>

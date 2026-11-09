@@ -14,6 +14,7 @@ const PRIVACY_MASK_KEY = 'expense_tracker_privacy_mask';
 const THEME_MODE_KEY = 'expense_tracker_theme';
 const SIDEBAR_COLLAPSED_KEY = 'expense_tracker_sidebar_collapsed';
 const UI_ZOOM_KEY = 'expense_tracker_ui_zoom';
+const ONBOARDING_TOUR_KEY = 'expense_tracker_onboarding_v1';
 let _uiZoomPct = 100;
 
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -431,6 +432,13 @@ async function initApp() {
 
   // Initialize MoMo settings UI (Android WebView bridge when available)
   if (typeof initMomoSettings === 'function') initMomoSettings();
+
+  // Auto-launch interactive Spotlight Tour on first-time visit
+  try {
+    if (localStorage.getItem(ONBOARDING_TOUR_KEY) !== 'true') {
+      setTimeout(() => startOnboardingTour(false), 650);
+    }
+  } catch(e) {}
 }
 
 function getPrivacyEyeSvg(masked) {
@@ -655,3 +663,209 @@ async function forceUpdateApp() {
   } catch(e) {}
   window.location.reload();
 }
+
+// ═══════════════════════════════════════════════
+//  INTERACTIVE SPOTLIGHT ONBOARDING TOUR
+// ═══════════════════════════════════════════════
+
+const ONBOARDING_STEPS = [
+  {
+    page: 'dashboard',
+    selector: '.gfx-hero-banner',
+    title: '💰 Tổng Số Dư & Chế Độ Ẩn Tiền',
+    desc: 'Hiển thị tổng số dư ròng toàn thời gian của bạn. Nhấn vào biểu tượng con mắt màu xanh ngọc bên cạnh lời chào để làm mờ toàn bộ số tiền nhạy cảm trên ứng dụng.'
+  },
+  {
+    page: 'dashboard',
+    selector: '#summary-grid',
+    title: '📊 Chỉ Số Tháng & Biểu Đồ Tương Tác',
+    desc: 'Theo dõi nhanh Tổng Thu, Tổng Chi, Tiết Kiệm Ròng và Tỷ Lệ Tiết Kiệm trong tháng. Chạm hoặc di chuột vào bất kỳ cột biểu đồ nào bên dưới để xem số tiền chính xác.'
+  },
+  {
+    page: 'add',
+    selector: '#page-add .card',
+    title: '➕ Ghi Chép Giao Dịch Thu / Chi',
+    desc: 'Tạo nhanh khoản Thu nhập (Income) hoặc Chi tiêu (Expense), chọn danh mục, ngày tháng và ghi chú. Số tiền nhập vào được tự động phân cách hàng nghìn.'
+  },
+  {
+    page: 'list',
+    selector: '#page-list .filter-bar',
+    title: '🔍 Lịch Sử & Bộ Lọc Thông Minh',
+    desc: 'Tìm kiếm giao dịch theo ghi chú, danh mục hoặc số tiền; lọc theo loại Thu/Chi và tháng. Bạn có thể chỉnh sửa hoặc xóa bất kỳ giao dịch nào ngay trong danh sách.'
+  },
+  {
+    page: 'charts',
+    selector: '#page-charts .chart-controls-row',
+    title: '📈 Phân Tích Xu Hướng Dài Hạn',
+    desc: 'Xem biểu đồ so sánh Thu - Chi, cơ cấu chi tiêu theo danh mục và xu hướng tích lũy tài sản từ 6 tháng đến 10 năm hoặc tùy chọn khoảng thời gian.'
+  },
+  {
+    page: 'budget',
+    selector: '#page-budget .dash-month-bar',
+    title: '🎯 Ngân Sách Tháng & Sổ Cái (Ledger)',
+    desc: 'Thiết lập hạn mức chi tiêu cho từng danh mục, quản lý danh mục tùy chỉnh và nhấn trực tiếp vào ô bất kỳ trong bảng Remaining Budget Ledger bên dưới để chỉnh ngân sách riêng cho từng tháng.'
+  },
+  {
+    page: 'portfolio',
+    selector: '#portfolio-kpi-grid',
+    title: '💎 Danh Mục Đầu Tư & Lãi/Lỗ ROI (%)',
+    desc: 'Theo dõi Vàng, BTC, ETF, Cổ phiếu hoặc nhấn "+ Add Investment Category" để thêm mới. Nhấn vào bất kỳ ô mục đầu tư nào để ghi nhận giá trị theo tháng và mở biểu đồ đường cong Lãi/Lỗ (%).'
+  },
+  {
+    page: 'export',
+    selector: '#page-export .export-grid',
+    title: '⚡ Đồng Bộ MoMo & Sao Lưu Đám Mây',
+    desc: 'Tự động bắt giao dịch MoMo trên Android, nhập file Excel sao kê MoMo (.xlsx) tự lọc trùng lặp, hoặc tải xuống/khôi phục bản sao lưu JSON toàn bộ dữ liệu.'
+  },
+  {
+    page: 'dashboard',
+    selector: '.topbar-actions',
+    title: '✨ Tùy Chỉnh Hiển Thị & Xem Lại Hướng Dẫn',
+    desc: 'Phóng to/thu nhỏ giao diện (− / +), chuyển đổi nền Sáng/Tối (Light / Dark), hoặc nhấn nút "?" trên thanh công cụ bất kỳ lúc nào để mở lại hướng dẫn này.'
+  }
+];
+
+let _tourActive = false;
+let _tourStepIdx = 0;
+let _tourSavedZoom = 100;
+
+function startOnboardingTour(manual = false) {
+  const overlay = document.getElementById('onboarding-tour');
+  if (!overlay) return;
+  _tourActive = true;
+  _tourStepIdx = 0;
+  _tourSavedZoom = _uiZoomPct;
+  if (_uiZoomPct !== 100) {
+    document.documentElement.style.setProperty('--ui-zoom', '1');
+  }
+  overlay.style.display = 'block';
+  renderOnboardingStep();
+}
+
+function stepOnboardingTour(delta) {
+  if (!_tourActive) return;
+  const nextIdx = _tourStepIdx + delta;
+  if (nextIdx < 0) return;
+  if (nextIdx >= ONBOARDING_STEPS.length) {
+    endOnboardingTour();
+    return;
+  }
+  _tourStepIdx = nextIdx;
+  renderOnboardingStep();
+}
+
+function endOnboardingTour() {
+  _tourActive = false;
+  const overlay = document.getElementById('onboarding-tour');
+  if (overlay) overlay.style.display = 'none';
+  if (_tourSavedZoom !== 100) {
+    document.documentElement.style.setProperty('--ui-zoom', (_tourSavedZoom / 100).toFixed(2));
+  }
+  try {
+    localStorage.setItem(ONBOARDING_TOUR_KEY, 'true');
+  } catch(e) {}
+  navigate('dashboard');
+}
+
+function renderOnboardingStep() {
+  if (!_tourActive) return;
+  const step = ONBOARDING_STEPS[_tourStepIdx];
+  if (!step) return;
+
+  const activePage = document.querySelector('.page.active');
+  if (!activePage || activePage.id !== `page-${step.page}`) {
+    navigate(step.page);
+  }
+
+  const badgeEl = document.getElementById('tour-step-badge');
+  const titleEl = document.getElementById('tour-title');
+  const descEl = document.getElementById('tour-desc');
+  const dotsEl = document.getElementById('tour-dots');
+  const prevBtn = document.getElementById('tour-prev-btn');
+  const nextBtn = document.getElementById('tour-next-btn');
+
+  if (badgeEl) badgeEl.textContent = `${_tourStepIdx + 1} / ${ONBOARDING_STEPS.length}`;
+  if (titleEl) titleEl.textContent = step.title;
+  if (descEl) descEl.textContent = step.desc;
+  if (dotsEl) {
+    dotsEl.innerHTML = ONBOARDING_STEPS.map((_, i) =>
+      `<span class="tour-dot ${i === _tourStepIdx ? 'active' : ''}"></span>`
+    ).join('');
+  }
+  if (prevBtn) {
+    prevBtn.style.visibility = _tourStepIdx === 0 ? 'hidden' : 'visible';
+  }
+  if (nextBtn) {
+    nextBtn.textContent = _tourStepIdx === ONBOARDING_STEPS.length - 1 ? 'Hoàn tất ✓' : 'Tiếp ›';
+  }
+
+  requestAnimationFrame(() => {
+    const target = document.querySelector(step.selector);
+    if (target) {
+      try {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      } catch(e) {}
+    }
+    positionTourElements();
+    setTimeout(positionTourElements, 260);
+  });
+}
+
+function positionTourElements() {
+  if (!_tourActive) return;
+  const step = ONBOARDING_STEPS[_tourStepIdx];
+  const spot = document.getElementById('tour-spotlight');
+  const card = document.getElementById('tour-card');
+  if (!step || !spot || !card) return;
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const target = document.querySelector(step.selector);
+
+  let sTop = vh / 2 - 40;
+  let sLeft = vw / 2 - 120;
+  let sWidth = 240;
+  let sHeight = 80;
+
+  if (target) {
+    const r = target.getBoundingClientRect();
+    const pad = 6;
+    const maxSpotH = Math.round(vh * 0.48);
+    sWidth = Math.min(vw - 16, Math.max(48, Math.round(r.width + pad * 2)));
+    sHeight = Math.min(maxSpotH, Math.max(38, Math.round(r.height + pad * 2)));
+    sLeft = Math.max(8, Math.min(vw - sWidth - 8, Math.round(r.left - pad)));
+    sTop = Math.max(8, Math.min(vh - sHeight - 8, Math.round(r.top - pad)));
+  }
+
+  spot.style.top = `${sTop}px`;
+  spot.style.left = `${sLeft}px`;
+  spot.style.width = `${sWidth}px`;
+  spot.style.height = `${sHeight}px`;
+
+  const cRect = card.getBoundingClientRect();
+  const cW = cRect.width || Math.min(370, vw - 24);
+  const cH = cRect.height || 190;
+
+  const spaceBelow = vh - (sTop + sHeight);
+  const spaceAbove = sTop;
+
+  let cTop;
+  if (spaceBelow >= cH + 20 || spaceBelow >= spaceAbove) {
+    cTop = Math.min(vh - cH - 14, sTop + sHeight + 14);
+  } else {
+    cTop = Math.max(14, sTop - cH - 14);
+  }
+
+  const spotCenterX = sLeft + sWidth / 2;
+  const cLeft = Math.max(12, Math.min(vw - cW - 12, Math.round(spotCenterX - cW / 2)));
+
+  card.style.top = `${Math.round(cTop)}px`;
+  card.style.left = `${cLeft}px`;
+}
+
+window.addEventListener('resize', () => {
+  if (_tourActive) positionTourElements();
+});
+window.addEventListener('scroll', () => {
+  if (_tourActive) positionTourElements();
+}, { passive: true });
