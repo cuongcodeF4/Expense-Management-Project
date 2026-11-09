@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/app.css?v=26">
+<link rel="stylesheet" href="/assets/css/app.css?v=28">
 
 <!-- Firebase SDKs (compat v10) -->
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -165,7 +165,7 @@
   </div>
   <div class="sidebar-footer" role="button" tabindex="0" onclick="forceUpdateApp()" title="Tap to force check &amp; update app to latest version" style="cursor:pointer">
     <span class="live-status-dot"></span>
-    <span class="sidebar-footer-text">v2.6 · Tap to Update</span>
+    <span class="sidebar-footer-text">v2.8 · Tap to Update</span>
   </div>
 </nav>
 
@@ -214,33 +214,20 @@
       <button>Import old data</button>
     </div>
 
-    <!-- Genesis FX Hero Balance & Quick Action Banner -->
+    <!-- Genesis FX Hero Balance Banner -->
     <div class="gfx-hero-banner">
       <div class="gfx-hero-left">
         <div class="gfx-greeting-row">
           <span id="hero-greeting">Welcome back</span>
-          <button type="button" class="gfx-eye-btn" id="privacy-toggle-btn" onclick="togglePrivacyMask()" title="Hide / Show balances" aria-label="Toggle balance visibility">👁</button>
+          <button type="button" class="gfx-eye-btn" id="privacy-toggle-btn" onclick="togglePrivacyMask()" title="Hide / Show balances" aria-label="Toggle balance visibility">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="rgba(0, 229, 153, 0.10)"/><circle cx="12" cy="12" r="3.2" fill="rgba(0, 229, 153, 0.28)"/></svg>
+          </button>
         </div>
         <div class="gfx-balance-row">
           <span id="hero-balance-value" class="gfx-hero-number sensitive-amount">0 ₫</span>
           <span class="gfx-currency-tag">VND</span>
         </div>
         <div id="hero-balance-delta" class="gfx-delta-row"></div>
-      </div>
-
-      <div class="gfx-hero-actions">
-        <button type="button" class="btn btn-primary gfx-pill-cta" onclick="quickAddTransaction('income')">
-          ↓ Income
-        </button>
-        <button type="button" class="btn btn-outline gfx-pill-action" onclick="quickAddTransaction('expense')">
-          ↑ Expense
-        </button>
-        <button type="button" class="btn btn-outline gfx-pill-action" onclick="navigate('export')">
-          ⇄ MoMo Sync
-        </button>
-        <button type="button" class="btn btn-outline gfx-pill-action" onclick="navigate('budget')">
-          ◎ Budget
-        </button>
       </div>
     </div>
 
@@ -519,13 +506,12 @@
     <!-- Portfolio KPI Summary Cards -->
     <div class="summary-grid" id="portfolio-kpi-grid"></div>
 
-    <!-- Add / Manage Investment Categories -->
-    <div class="card" style="margin-bottom:18px">
-      <div class="card-header">
-        <div class="card-title">Add Investment Category</div>
-        <button type="button" class="btn btn-outline" style="padding:5px 12px;font-size:12px" onclick="restoreDefaultInvestments()">↺ Restore Defaults</button>
-      </div>
-      <div class="card-body">
+    <!-- Add Investment Category (Compact button by default, expands on click) -->
+    <details class="card category-manager-card portfolio-add-collapsible" id="portfolio-add-details" style="margin-top:0;margin-bottom:18px">
+      <summary class="category-manager-summary">
+        <span>+ Add Investment Category</span>
+      </summary>
+      <div class="card-body category-manager-body">
         <form id="portfolio-add-form" class="portfolio-add-form" onsubmit="addInvestmentCategory(event)" autocomplete="off">
           <div class="form-group">
             <label for="new-inv-icon">Icon</label>
@@ -546,19 +532,24 @@
           <button type="submit" class="btn btn-primary portfolio-add-btn">+ Add Asset</button>
         </form>
       </div>
-    </div>
+    </details>
 
     <!-- Investment Categories Grid -->
     <div class="budget-grid" id="portfolio-assets-grid" style="margin-bottom:22px"></div>
 
-    <!-- Selected Asset Detail & Monthly ROI (%) Panel -->
+    <!-- Selected Asset Detail & Monthly ROI (%) Panel (Hidden until user selects an asset) -->
     <div class="card gfx-card-glow" id="portfolio-detail-card" style="margin-bottom:22px;display:none">
       <div class="card-header" style="flex-wrap:wrap;gap:10px">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <div class="card-title">Asset Monthly Valuation &amp; ROI (%)</div>
           <select id="detail-asset-select" onchange="onSelectDetailAssetChange(this)" style="padding:5px 12px;border-radius:999px;font-size:13px;font-weight:700"></select>
         </div>
-        <div id="detail-asset-summary-badge" class="portfolio-detail-badges"></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto">
+          <div id="detail-asset-summary-badge" class="portfolio-detail-badges"></div>
+          <button type="button" class="btn btn-outline" style="padding:5px 12px;font-size:12px" onclick="closeInvestmentDetail()" title="Collapse Asset Detail">
+            ▲ Collapse
+          </button>
+        </div>
       </div>
       <div class="card-body">
         <form class="portfolio-monthly-form" onsubmit="saveAssetMonthlyRecord(event)" autocomplete="off">
@@ -581,6 +572,7 @@
           <div class="card" style="box-shadow:none">
             <div class="card-header">
               <div class="card-title">Selected Asset Profit / Loss (%) Curve</div>
+              <button type="button" class="btn btn-outline" style="padding:3px 9px;font-size:11px" onclick="closeInvestmentDetail()" title="Collapse Curve">▲</button>
             </div>
             <div class="card-body">
               <div class="chart-container" style="height:240px">
@@ -809,13 +801,15 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     <span>History</span>
   </button>
-  <button type="button" class="mnav-item mnav-add" data-page="add" onclick="navigate('add')">
-    <span class="mnav-add-circle">+</span>
-    <span>Add</span>
-  </button>
   <button type="button" class="mnav-item" data-page="charts" onclick="navigate('charts')">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><polyline points="18 9 13 14 9 10 5 14"/></svg>
     <span>Charts</span>
+  </button>
+  <button type="button" class="mnav-item mnav-add" data-page="add" onclick="navigate('add')">
+    <span class="mnav-add-circle">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </span>
+    <span>Add</span>
   </button>
   <button type="button" class="mnav-item" data-page="budget" onclick="navigate('budget')">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21"/></svg>
@@ -855,17 +849,17 @@
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
 
 <!-- App scripts -->
-<script src="/assets/js/config.js?v=26"></script>
-<script src="/assets/js/auth.js?v=26"></script>
-<script src="/assets/js/categories.js?v=26"></script>
-<script src="/assets/js/db.js?v=26"></script>
-<script src="/assets/js/app.js?v=26"></script>
-<script src="/assets/js/dashboard.js?v=26"></script>
-<script src="/assets/js/transactions.js?v=26"></script>
-<script src="/assets/js/charts.js?v=26"></script>
-<script src="/assets/js/budget.js?v=26"></script>
-<script src="/assets/js/portfolio.js?v=26"></script>
-<script src="/assets/js/dataio.js?v=26"></script>
+<script src="/assets/js/config.js?v=28"></script>
+<script src="/assets/js/auth.js?v=28"></script>
+<script src="/assets/js/categories.js?v=28"></script>
+<script src="/assets/js/db.js?v=28"></script>
+<script src="/assets/js/app.js?v=28"></script>
+<script src="/assets/js/dashboard.js?v=28"></script>
+<script src="/assets/js/transactions.js?v=28"></script>
+<script src="/assets/js/charts.js?v=28"></script>
+<script src="/assets/js/budget.js?v=28"></script>
+<script src="/assets/js/portfolio.js?v=28"></script>
+<script src="/assets/js/dataio.js?v=28"></script>
 
 <!-- Service Worker Registration -->
 <script>

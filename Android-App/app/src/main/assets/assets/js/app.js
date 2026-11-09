@@ -133,8 +133,9 @@ function applyChartThemeDefaults() {
   Chart.defaults.borderColor = isLight ? 'rgba(5, 150, 105, 0.12)' : 'rgba(0, 229, 153, 0.08)';
   Chart.defaults.font.family = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif";
   Chart.defaults.resizeDelay = 120;
-  // Exclude 'mouseout' so Android WebView synthetic mouseout after touchend never hides the tapped bar tooltip
-  Chart.defaults.events = ['mousemove', 'click', 'touchstart', 'touchmove'];
+  // Disable Chart.js built-in pointer events (which miscalculate coordinates under CSS zoom on Android WebView)
+  // and drive both tooltip and top readout exclusively from our zoom-corrected pointer handler
+  Chart.defaults.events = [];
   if (Chart.defaults.plugins?.tooltip) {
     Chart.defaults.plugins.tooltip.backgroundColor = isLight ? 'rgba(6, 32, 25, 0.94)' : 'rgba(4, 14, 10, 0.95)';
     Chart.defaults.plugins.tooltip.titleColor = '#FFFFFF';
@@ -147,15 +148,42 @@ function applyChartThemeDefaults() {
   }
 }
 
+function handleChartLegendClick(chart, relX, relY) {
+  const legend = chart?.legend;
+  const boxes = legend?.legendHitBoxes;
+  const items = legend?.legendItems;
+  if (!boxes || !items) return false;
+  for (let i = 0; i < boxes.length; i++) {
+    const b = boxes[i];
+    if (relX >= b.left && relX <= b.left + b.width && relY >= b.top && relY <= b.top + b.height) {
+      const item = items[i];
+      if (item && typeof item.datasetIndex === 'number') {
+        const vis = chart.isDatasetVisible(item.datasetIndex);
+        chart.setDatasetVisibility(item.datasetIndex, !vis);
+        chart.update();
+        return true;
+      } else if (item && typeof item.index === 'number') {
+        chart.toggleDataVisibility(item.index);
+        chart.update();
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 function bindChartTouchInspector(chart) {
   if (!chart || !chart.canvas) return;
+  if (chart.options) chart.options.events = [];
+  if (chart.config?.options) chart.config.options.events = [];
+  if (typeof chart._unbindEvents === 'function') chart._unbindEvents();
   const canvas = chart.canvas;
   const cardBody = canvas.closest('.card-body');
   let readout = cardBody ? cardBody.querySelector('.chart-active-readout') : null;
   if (cardBody && !readout) {
     readout = document.createElement('div');
     readout.className = 'chart-active-readout';
-    readout.innerHTML = '<span class="chart-readout-hint">👆 Chạm hoặc vuốt vào cột/biểu đồ để xem chi tiết số tiền</span>';
+    readout.innerHTML = '<span class="chart-readout-hint">👆 Tap or hover on any bar/slice to view exact amount</span>';
     cardBody.insertBefore(readout, cardBody.firstChild);
   }
 
@@ -164,7 +192,7 @@ function bindChartTouchInspector(chart) {
     const labels = chart.data?.labels || [];
     const rawLabel = labels[idx] !== undefined ? String(labels[idx]) : '';
     const titleLabel = (canvas.id === 'dashDailyChart' && /^\d+$/.test(rawLabel))
-      ? `Ngày ${rawLabel}`
+      ? `Day ${rawLabel}`
       : rawLabel;
 
     if (isDoughnut) {
@@ -206,7 +234,7 @@ function bindChartTouchInspector(chart) {
     }
   }
 
-  function handlePointerAt(clientX, clientY) {
+  function handlePointerAt(clientX, clientY, isClick = false) {
     if (!chart.ctx || !chart.width || !chart.height) return;
     const rect = canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
@@ -217,7 +245,7 @@ function bindChartTouchInspector(chart) {
 
     const area = chart.chartArea;
     if (area && relY < area.top - 2) {
-      // Allow top legend clicks to work normally
+      if (isClick) handleChartLegendClick(chart, relX, relY);
       return;
     }
 
@@ -254,39 +282,51 @@ function bindChartTouchInspector(chart) {
       return;
     }
 
-    // Cartesian bar / line chart: snap to nearest column X regardless of bar height
+    // Cartesian bar / line chart: snap to true X-axis column center so tooltip and top readout always match 100%
+    const labelCount = (chart.data?.labels || []).length;
+    if (!labelCount) return;
+
     let bestIdx = -1;
     let bestDist = Infinity;
     let targetX = relX;
     let targetY = area ? (area.top + area.bottom) / 2 : relY;
+    const xScale = chart.scales?.x;
 
-    for (let dsIdx = 0; dsIdx < (chart.data.datasets || []).length; dsIdx++) {
-      if (!chart.isDatasetVisible(dsIdx)) continue;
-      const meta = chart.getDatasetMeta(dsIdx);
-      if (!meta?.data?.length) continue;
-      meta.data.forEach((el, idx) => {
-        if (!el || typeof el.x !== 'number' || isNaN(el.x)) return;
-        const d = Math.abs(el.x - relX);
-        if (d < bestDist) {
-          bestDist = d;
-          bestIdx = idx;
-          targetX = el.x;
-          if (typeof el.y === 'number' && !isNaN(el.y)) {
-            targetY = Math.max((area?.top || 0) + 18, Math.min(el.y, (area?.bottom || chart.height) - 18));
-          }
-        }
-      });
-      if (bestIdx !== -1) break;
+    for (let idx = 0; idx < labelCount; idx++) {
+      let colX = xScale ? xScale.getPixelForValue(idx) : NaN;
+      if (!Number.isFinite(colX)) {
+        const xs = [];
+        (chart.data.datasets || []).forEach((_, dsIdx) => {
+          if (!chart.isDatasetVisible(dsIdx)) return;
+          const pt = chart.getDatasetMeta(dsIdx)?.data?.[idx];
+          if (pt && Number.isFinite(pt.x)) xs.push(pt.x);
+        });
+        if (xs.length) colX = xs.reduce((a, b) => a + b, 0) / xs.length;
+      }
+      if (!Number.isFinite(colX)) continue;
+      const d = Math.abs(colX - relX);
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = idx;
+        targetX = colX;
+      }
     }
 
     if (bestIdx === -1) return;
 
     const active = [];
+    let minBarY = area ? area.bottom : chart.height;
     (chart.data.datasets || []).forEach((_, dsIdx) => {
-      if (chart.isDatasetVisible(dsIdx) && chart.getDatasetMeta(dsIdx)?.data?.[bestIdx]) {
+      const pt = chart.getDatasetMeta(dsIdx)?.data?.[bestIdx];
+      if (chart.isDatasetVisible(dsIdx) && pt) {
         active.push({ datasetIndex: dsIdx, index: bestIdx });
+        if (Number.isFinite(pt.y) && pt.y < minBarY) minBarY = pt.y;
       }
     });
+
+    if (area) {
+      targetY = Math.max(area.top + 18, Math.min(minBarY, area.bottom - 18));
+    }
 
     chart.setActiveElements(active);
     chart.tooltip?.setActiveElements(active, { x: targetX, y: targetY });
@@ -303,25 +343,24 @@ function bindChartTouchInspector(chart) {
       if (!e.touches || e.touches.length !== 1) return;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
-      if (canvas._activeChartInstance) {
-        canvas._activeChartInstance._handlePointerAt(startX, startY);
-      }
+      canvas._activeChartInstance?._handlePointerAt(startX, startY, false);
     }, { passive: true });
 
     canvas.addEventListener('touchmove', e => {
       if (!e.touches || e.touches.length !== 1) return;
       const dx = Math.abs(e.touches[0].clientX - startX);
       const dy = Math.abs(e.touches[0].clientY - startY);
-      // Update column selection when dragging horizontally across bars
-      if (dx >= dy * 0.7 && canvas._activeChartInstance) {
-        canvas._activeChartInstance._handlePointerAt(e.touches[0].clientX, e.touches[0].clientY);
+      if (dx >= dy * 0.7) {
+        canvas._activeChartInstance?._handlePointerAt(e.touches[0].clientX, e.touches[0].clientY, false);
       }
     }, { passive: true });
 
+    canvas.addEventListener('mousemove', e => {
+      canvas._activeChartInstance?._handlePointerAt(e.clientX, e.clientY, false);
+    }, { passive: true });
+
     canvas.addEventListener('click', e => {
-      if (canvas._activeChartInstance) {
-        canvas._activeChartInstance._handlePointerAt(e.clientX, e.clientY);
-      }
+      canvas._activeChartInstance?._handlePointerAt(e.clientX, e.clientY, true);
     });
   }
 
@@ -394,19 +433,26 @@ async function initApp() {
   if (typeof initMomoSettings === 'function') initMomoSettings();
 }
 
+function getPrivacyEyeSvg(masked) {
+  if (masked) {
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+  }
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="rgba(0, 229, 153, 0.10)"/><circle cx="12" cy="12" r="3.2" fill="rgba(0, 229, 153, 0.28)"/></svg>`;
+}
+
 function initPrivacyMask() {
   try {
     const masked = localStorage.getItem(PRIVACY_MASK_KEY) === 'true';
     document.body.classList.toggle('privacy-masked', masked);
     const btn = document.getElementById('privacy-toggle-btn');
-    if (btn) btn.textContent = masked ? '🙈' : '👁';
+    if (btn) btn.innerHTML = getPrivacyEyeSvg(masked);
   } catch(e) {}
 }
 
 function togglePrivacyMask() {
   const masked = document.body.classList.toggle('privacy-masked');
   const btn = document.getElementById('privacy-toggle-btn');
-  if (btn) btn.textContent = masked ? '🙈' : '👁';
+  if (btn) btn.innerHTML = getPrivacyEyeSvg(masked);
   try { localStorage.setItem(PRIVACY_MASK_KEY, String(masked)); } catch(e) {}
 }
 

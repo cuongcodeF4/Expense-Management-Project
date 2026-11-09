@@ -196,8 +196,7 @@ function renderPortfolioCards(assets) {
     grid.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1">
         <div class="es-icon">📈</div>
-        <div class="es-text">No investment categories yet. Add one above or restore defaults.</div>
-        <button type="button" class="btn btn-outline" style="margin-top:12px" onclick="restoreDefaultInvestments()">↺ Restore Default Categories</button>
+        <div class="es-text">No investment categories yet. Tap "+ Add Investment Category" above to create one.</div>
       </div>
     `;
     return;
@@ -216,7 +215,7 @@ function renderPortfolioCards(assets) {
     const monthCount = Object.keys(asset.monthlyHistory || {}).length;
 
     return `
-      <div class="budget-item portfolio-asset-card ${isSelected ? 'selected' : ''}" data-asset-id="${escapeHtml(asset.id)}">
+      <div class="budget-item portfolio-asset-card ${isSelected ? 'selected' : ''}" data-asset-id="${escapeHtml(asset.id)}" onclick="handleAssetCardClick(event, '${escapeHtml(asset.id)}')">
         <div class="budget-header" style="gap:8px">
           <div class="budget-cat" style="display:flex;align-items:center;gap:7px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
             <span class="portfolio-color-dot" style="background:${escapeHtml(asset.color || '#00E599')}"></span>
@@ -554,6 +553,9 @@ function renderPortfolioCharts(assets) {
 // Custom readout binder for ROI (%) charts so the live bar displays signed % instead of VND
 function bindPortfolioMultiLineTouch(chart, isSingleAsset = false, assetRef = null) {
   if (!chart || !chart.canvas) return;
+  if (chart.options) chart.options.events = [];
+  if (chart.config?.options) chart.config.options.events = [];
+  if (typeof chart._unbindEvents === 'function') chart._unbindEvents();
   const canvas = chart.canvas;
   const cardBody = canvas.closest('.card-body');
   let readout = cardBody ? cardBody.querySelector('.chart-active-readout') : null;
@@ -564,37 +566,60 @@ function bindPortfolioMultiLineTouch(chart, isSingleAsset = false, assetRef = nu
     cardBody.insertBefore(readout, cardBody.firstChild);
   }
 
-  function handlePointer(clientX, clientY) {
+  function handlePointer(clientX, clientY, isClick = false) {
     if (!chart.ctx || !chart.width || !chart.height) return;
     const rect = canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
     const relX = ((clientX - rect.left) / rect.width) * chart.width;
     const relY = ((clientY - rect.top) / rect.height) * chart.height;
     const area = chart.chartArea;
-    if (area && relY < area.top - 2) return;
+    if (area && relY < area.top - 2) {
+      if (isClick && typeof handleChartLegendClick === 'function') {
+        handleChartLegendClick(chart, relX, relY);
+      }
+      return;
+    }
 
     let bestIdx = -1;
     let bestDist = Infinity;
     let targetX = relX;
     let targetY = area ? (area.top + area.bottom) / 2 : relY;
 
+    const xScale = chart.scales?.x;
+    const labelCount = (chart.data.labels || []).length;
+    if (xScale && labelCount > 0) {
+      for (let idx = 0; idx < labelCount; idx++) {
+        const px = xScale.getPixelForValue(idx);
+        if (typeof px !== 'number' || isNaN(px)) continue;
+        const d = Math.abs(px - relX);
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = idx;
+          targetX = px;
+        }
+      }
+    }
+
     for (let dsIdx = 0; dsIdx < (chart.data.datasets || []).length; dsIdx++) {
       if (!chart.isDatasetVisible(dsIdx)) continue;
       const meta = chart.getDatasetMeta(dsIdx);
       if (!meta?.data?.length) continue;
-      meta.data.forEach((el, idx) => {
-        if (!el || typeof el.x !== 'number' || isNaN(el.x)) return;
-        const d = Math.abs(el.x - relX);
-        if (d < bestDist) {
-          bestDist = d;
-          bestIdx = idx;
-          targetX = el.x;
-          if (typeof el.y === 'number' && !isNaN(el.y)) {
-            targetY = Math.max((area?.top || 0) + 18, Math.min(el.y, (area?.bottom || chart.height) - 18));
+      if (bestIdx === -1) {
+        meta.data.forEach((el, idx) => {
+          if (!el || typeof el.x !== 'number' || isNaN(el.x)) return;
+          const d = Math.abs(el.x - relX);
+          if (d < bestDist) {
+            bestDist = d;
+            bestIdx = idx;
+            targetX = el.x;
           }
-        }
-      });
-      if (bestIdx !== -1) break;
+        });
+      }
+      const el = meta.data[bestIdx];
+      if (el && typeof el.y === 'number' && !isNaN(el.y)) {
+        targetY = Math.max((area?.top || 0) + 18, Math.min(el.y, (area?.bottom || chart.height) - 18));
+        break;
+      }
     }
 
     if (bestIdx === -1) return;
@@ -665,8 +690,11 @@ function bindPortfolioMultiLineTouch(chart, isSingleAsset = false, assetRef = nu
       const dy = Math.abs(e.touches[0].clientY - sy);
       if (dx >= dy * 0.7) canvas._roiHandler?.(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
+    canvas.addEventListener('mousemove', e => {
+      canvas._roiHandler?.(e.clientX, e.clientY, false);
+    }, { passive: true });
     canvas.addEventListener('click', e => {
-      canvas._roiHandler?.(e.clientX, e.clientY);
+      canvas._roiHandler?.(e.clientX, e.clientY, true);
     });
   }
   canvas._roiHandler = handlePointer;
@@ -731,7 +759,9 @@ function addInvestmentCategory(event) {
   if (initEl) initEl.value = '';
   if (curEl) curEl.value = '';
 
-  _selectedAssetId = id;
+  const detailsEl = document.getElementById('portfolio-add-details');
+  if (detailsEl) detailsEl.open = false;
+
   renderPortfolio();
   showToast(`Added "${name}" to Investment Portfolio`, 'success');
 }
@@ -745,7 +775,7 @@ function deleteInvestmentCategory(assetId) {
 
   assets.splice(idx, 1);
   if (_selectedAssetId === assetId) {
-    _selectedAssetId = assets[0]?.id || null;
+    _selectedAssetId = null;
   }
   const data = getData();
   data.investments = assets;
@@ -806,7 +836,19 @@ function saveAssetQuickAmounts(assetId) {
 //  ASSET DETAIL DRILLDOWN — Monthly Valuation Log & ROI (%) Chart
 // ═══════════════════════════════════════════════
 
+function handleAssetCardClick(event, assetId) {
+  if (event && event.target && event.target.closest('input, button, label, select, a')) {
+    return;
+  }
+  openInvestmentDetail(assetId);
+}
+
 function openInvestmentDetail(assetId) {
+  if (_selectedAssetId === assetId) {
+    _selectedAssetId = null;
+    renderPortfolio();
+    return;
+  }
   _selectedAssetId = assetId;
   renderPortfolio();
   const panel = document.getElementById('portfolio-detail-card');
@@ -816,9 +858,28 @@ function openInvestmentDetail(assetId) {
 }
 
 function closeInvestmentDetail() {
+  if (!_selectedAssetId) return;
   _selectedAssetId = null;
   renderPortfolio();
 }
+
+// Click outside any asset card, allocation row, or the detail panel itself closes the detail panel
+document.addEventListener('click', e => {
+  const page = document.getElementById('page-portfolio');
+  if (!page || !page.classList.contains('active')) return;
+  if (!e.target || !document.body.contains(e.target)) return;
+
+  const addDetails = document.getElementById('portfolio-add-details');
+  if (addDetails && addDetails.open && !e.target.closest('#portfolio-add-details')) {
+    addDetails.open = false;
+  }
+
+  if (!_selectedAssetId) return;
+  if (e.target.closest('#portfolio-detail-card, .portfolio-asset-card, .portfolio-table-row, #portfolioAllocLegend')) {
+    return;
+  }
+  closeInvestmentDetail();
+});
 
 function onSelectDetailAssetChange(sel) {
   if (!sel) return;
@@ -830,12 +891,14 @@ function renderSelectedAssetDetail(assets) {
   const card = document.getElementById('portfolio-detail-card');
   if (!card) return;
 
-  if (!_selectedAssetId && assets.length > 0) {
-    _selectedAssetId = assets[0].id;
+  if (!_selectedAssetId) {
+    card.style.display = 'none';
+    return;
   }
 
   const asset = assets.find(a => a.id === _selectedAssetId);
   if (!asset) {
+    _selectedAssetId = null;
     card.style.display = 'none';
     return;
   }
