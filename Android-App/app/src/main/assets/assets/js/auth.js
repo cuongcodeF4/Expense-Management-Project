@@ -76,11 +76,6 @@ auth.onAuthStateChanged(user => {
     }
 
     initApp();
-
-    // Xử lý các giao dịch MoMo đến khi chưa đăng nhập
-    if (typeof processPendingMomoTransactions === 'function') {
-      processPendingMomoTransactions();
-    }
   } else {
     if (typeof resetAppDataState === 'function') resetAppDataState();
     window._uid = null;

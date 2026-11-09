@@ -2553,28 +2553,9 @@ body.light-mode .toast {
   color: #FFFFFF;
 }
 
-.momo-settings-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.momo-perm-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-
 body.light-mode .sidebar-mobile-user,
 body.light-mode .ledger-toolbar,
-body.light-mode .ledger-zoom-controls,
-body.light-mode .momo-perm-row {
+body.light-mode .ledger-zoom-controls {
   background: #F4FAF7;
   border-color: rgba(5, 150, 105, 0.22);
 }

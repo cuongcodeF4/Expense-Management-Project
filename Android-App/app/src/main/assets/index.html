@@ -146,12 +146,12 @@
       <span class="nav-chevron">›</span>
     </div>
     <div class="nav-section">Data &amp; Sync</div>
-    <div class="nav-item" role="button" tabindex="0" onclick="navigate('export')" title="MoMo &amp; Backup">
+    <div class="nav-item" role="button" tabindex="0" onclick="navigate('export')" title="Cloud Backup">
       <span class="nav-item-left">
         <span class="nav-glyph">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </span>
-        <span class="nav-label">MoMo &amp; Backup</span>
+        <span class="nav-label">Cloud Backup</span>
       </span>
       <span class="nav-chevron">›</span>
     </div>
@@ -165,7 +165,7 @@
   </div>
   <div class="sidebar-footer" role="button" tabindex="0" onclick="forceUpdateApp()" title="Tap to force check &amp; update app to latest version" style="cursor:pointer">
     <span class="live-status-dot"></span>
-    <span class="sidebar-footer-text">v2.8 · Tap to Update</span>
+    <span class="sidebar-footer-text">v2.9 · Tap to Update</span>
   </div>
 </nav>
 
@@ -676,84 +676,9 @@
 
   <!-- EXPORT/IMPORT -->
   <div class="page" id="page-export">
-    <div class="section-title">MoMo Sync &amp; Cloud Backup</div>
-
-    <!-- Native Android MoMo Auto-Import Settings (Shown automatically when running inside Android WebView) -->
-    <div id="momo-settings" class="card gfx-card-glow" style="display:none;max-width:920px;margin-bottom:16px">
-      <div class="card-header"><div class="card-title">📱 MoMo Auto-Import (Android Native Service)</div></div>
-      <div class="card-body">
-        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
-          Automatically capture MoMo transactions on this device. Grant the <b>2 permissions</b> below to enable real-time capture.
-        </p>
-        <div class="momo-settings-rows">
-          <div class="momo-perm-row">
-            <div>
-              <div style="font-size:13px;font-weight:600">Notification Access <span style="font-size:12px;color:var(--text-muted)">(Incoming transfers)</span></div>
-              <div id="momo-perm-status" style="font-size:12px;margin-top:2px">
-                <span style="color:var(--text-muted)">● Checking...</span>
-              </div>
-            </div>
-            <button id="momo-perm-btn" class="btn btn-primary" onclick="openNotifSettings()" style="font-size:12px;padding:6px 14px">
-              Grant Permission
-            </button>
-          </div>
-          <div class="momo-perm-row">
-            <div>
-              <div style="font-size:13px;font-weight:600">Accessibility Service <span style="font-size:12px;color:var(--text-muted)">(Outgoing payments)</span></div>
-              <div id="momo-acc-status" style="font-size:12px;margin-top:2px">
-                <span style="color:var(--text-muted)">● Checking...</span>
-              </div>
-            </div>
-            <button id="momo-acc-btn" class="btn btn-primary" onclick="openAccessibilitySettings()" style="font-size:12px;padding:6px 14px">
-              Grant Permission
-            </button>
-          </div>
-          <div class="momo-perm-row">
-            <div>
-              <div style="font-size:13px;font-weight:600">Auto-Add Transactions</div>
-              <div id="momo-toggle-status" style="font-size:12px;margin-top:2px;color:var(--text-muted)">Loading...</div>
-            </div>
-            <button id="momo-toggle-btn" class="btn btn-outline" onclick="toggleMomoAutoAdd()" style="font-size:12px;padding:6px 14px">
-              Toggle
-            </button>
-          </div>
-          <div style="font-size:12px;color:var(--text-muted);line-height:1.6;padding:2px 0">
-            ⓘ Captured transactions are auto-categorized as "Other" and can be edited anytime in All Transactions. Duplicate notifications are filtered automatically.
-          </div>
-          <div class="momo-perm-row">
-            <div>
-              <div style="font-size:13px;font-weight:600">Test Integration</div>
-              <div style="font-size:12px;margin-top:2px;color:var(--text-muted)">Simulate a MoMo notification to verify setup</div>
-            </div>
-            <button class="btn btn-outline" onclick="testMomoTransaction()" style="font-size:12px;padding:6px 14px">
-              Test
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="section-title">Cloud Backup &amp; Restore</div>
 
     <div class="export-grid">
-      <!-- MoMo Excel Import -->
-      <div class="card gfx-card-glow">
-        <div class="card-header"><div class="card-title">⚡ Auto-Sync MoMo (.xlsx)</div></div>
-        <div class="card-body">
-          <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px">
-            Import transaction history from an exported MoMo Excel statement. Duplicate transactions (by MoMo ID) are skipped automatically.
-          </p>
-          <div class="import-area" onclick="document.getElementById('import-momo-file').click()">
-            <div class="ia-icon">📊</div>
-            <div>Click to upload MoMo .xlsx file</div>
-            <div style="font-size:12px;margin-top:4px;opacity:0.8">Appends new entries without overwriting existing data</div>
-          </div>
-          <input type="file" id="import-momo-file" accept=".xlsx,.xls" style="display:none" onchange="importMomoXlsx(event)">
-          <div style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.6">
-            ⓘ Required columns: <em>Thời gian, Loại giao dịch, Số Tiền, Trạng Thái GD</em>.<br>
-            Entries containing "Nhận / Hoàn / Nạp" are classified as <strong>Income</strong>, others as <strong>Expense</strong>.
-          </div>
-        </div>
-      </div>
-
       <!-- Export JSON -->
       <div class="card">
         <div class="card-header"><div class="card-title">↓ Export Cloud Snapshot</div></div>
@@ -822,7 +747,7 @@
   </button>
   <button type="button" class="mnav-item" data-page="export" onclick="navigate('export')">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    <span>MoMo</span>
+    <span>Backup</span>
   </button>
 </nav>
 
@@ -866,9 +791,6 @@
 <!-- Toast container -->
 <div id="toast-container" aria-live="polite"></div>
 
-<!-- SheetJS v0.20.3 for Excel import (patched CVE-2023-30533 & CVE-2024-22363 with SRI) -->
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
-
 <!-- App scripts -->
 <script src="/assets/js/config.js"></script>
 <script src="/assets/js/auth.js"></script>
@@ -881,7 +803,5 @@
 <script src="/assets/js/budget.js"></script>
 <script src="/assets/js/portfolio.js"></script>
 <script src="/assets/js/dataio.js"></script>
-
-<script src="/assets/js/momo.js"></script>
 </body>
 </html>

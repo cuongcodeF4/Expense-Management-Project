@@ -430,9 +430,6 @@ async function initApp() {
   if (typeof renderPortfolio === 'function') renderPortfolio();
   renderExportStats();
 
-  // Initialize MoMo settings UI (Android WebView bridge when available)
-  if (typeof initMomoSettings === 'function') initMomoSettings();
-
   // Auto-launch interactive Spotlight Tour on first-time visit
   try {
     if (localStorage.getItem(ONBOARDING_TOUR_KEY) !== 'true') {
@@ -527,7 +524,7 @@ const pageTitles = {
   charts: 'Charts & Analytics',
   budget: 'Monthly Budget',
   portfolio: 'Investment Portfolio',
-  export: 'MoMo Sync & Backup',
+  export: 'Cloud Backup',
 };
 
 function navigate(page) {
@@ -547,7 +544,7 @@ function navigate(page) {
   if (page === 'charts') renderCharts();
   if (page === 'budget') renderBudget();
   if (page === 'portfolio' && typeof renderPortfolio === 'function') renderPortfolio();
-  if (page === 'export') { renderExportStats(); if (typeof initMomoSettings === 'function') initMomoSettings(); }
+  if (page === 'export') renderExportStats();
   if (page === 'dashboard') renderDashboard();
 }
 
@@ -714,8 +711,8 @@ const ONBOARDING_STEPS = [
   {
     page: 'export',
     selector: '#page-export .export-grid',
-    title: '⚡ Đồng Bộ MoMo & Sao Lưu Đám Mây',
-    desc: 'Tự động bắt giao dịch MoMo trên Android, nhập file Excel sao kê MoMo (.xlsx) tự lọc trùng lặp, hoặc tải xuống/khôi phục bản sao lưu JSON toàn bộ dữ liệu.'
+    title: '☁️ Sao Lưu & Khôi Phục Dữ Liệu (Backup)',
+    desc: 'Tải xuống toàn bộ giao dịch, ngân sách và danh mục dưới dạng file JSON để sao lưu an toàn, hoặc khôi phục lại dữ liệu từ file JSON bất kỳ lúc nào.'
   },
   {
     page: 'dashboard',

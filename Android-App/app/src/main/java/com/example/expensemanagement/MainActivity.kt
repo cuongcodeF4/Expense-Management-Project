@@ -2,10 +2,7 @@ package com.example.expensemanagement
 
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.os.Bundle
@@ -20,15 +17,12 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.webkit.WebViewAssetLoader
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var assetLoader: WebViewAssetLoader
-    private lateinit var bridge: WebAppBridge
-    private var momoReceiver: BroadcastReceiver? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,13 +46,6 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webView)
         configureWebView(webView)
-
-        // Set up native ↔ JS bridge
-        bridge = WebAppBridge(this, webView)
-        webView.addJavascriptInterface(bridge, WebAppBridge.JS_INTERFACE_NAME)
-
-        // Register receiver for MoMo notification broadcasts
-        registerMomoReceiver()
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(
@@ -214,42 +201,5 @@ class MainActivity : AppCompatActivity() {
             // Use a standard mobile Chrome User-Agent to bypass the "disallowed_useragent" error
             userAgentString = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36"
         }
-    }
-
-    private fun registerMomoReceiver() {
-        momoReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                if (intent.action != MomoNotificationService.ACTION_MOMO_TRANSACTION) return
-
-                // Check if auto-add is enabled
-                val prefs = getSharedPreferences("momo_prefs", MODE_PRIVATE)
-                if (!prefs.getBoolean("auto_add", true)) return
-
-                val amount = intent.getDoubleExtra(MomoNotificationService.EXTRA_AMOUNT, 0.0)
-                val type = intent.getStringExtra(MomoNotificationService.EXTRA_TYPE) ?: "expense"
-                val note = intent.getStringExtra(MomoNotificationService.EXTRA_NOTE) ?: "MoMo payment"
-                val date = intent.getStringExtra(MomoNotificationService.EXTRA_DATE) ?: ""
-                val timestamp = intent.getLongExtra(MomoNotificationService.EXTRA_TIMESTAMP, 0)
-
-                if (amount > 0) {
-                    bridge.injectMomoTransaction(amount, type, note, date, timestamp)
-                }
-            }
-        }
-
-        val filter = IntentFilter(MomoNotificationService.ACTION_MOMO_TRANSACTION)
-        ContextCompat.registerReceiver(
-            this,
-            momoReceiver,
-            filter,
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
-    }
-
-    override fun onDestroy() {
-        momoReceiver?.let {
-            try { unregisterReceiver(it) } catch (_: Exception) { }
-        }
-        super.onDestroy()
     }
 }

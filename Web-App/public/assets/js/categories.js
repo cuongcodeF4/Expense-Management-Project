@@ -191,7 +191,6 @@ function normalizeTransactions(rawTransactions) {
       date,
       note: String(raw.note || '').slice(0, 200)
     };
-    if (transaction.momoCode != null) transaction.momoCode = String(transaction.momoCode).slice(0, 100);
     normalized.push(transaction);
   });
   return normalized.sort((a, b) => b.date.localeCompare(a.date));

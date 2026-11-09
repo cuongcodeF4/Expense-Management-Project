@@ -27,30 +27,6 @@
             </intent-filter>
         </activity>
 
-        <!-- MoMo Notification Listener Service (nhận tiền) -->
-        <service
-            android:name=".MomoNotificationService"
-            android:exported="true"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
-
-        <!-- MoMo Accessibility Service (chuyển tiền — đọc màn hình kết quả) -->
-        <service
-            android:name=".MomoAccessibilityService"
-            android:exported="true"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/momo_accessibility_service" />
-        </service>
-
     </application>
 
 </manifest>
