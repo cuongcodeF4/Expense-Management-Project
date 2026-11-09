@@ -31,7 +31,11 @@ function onDashMonthChange() {
 
 function getGreetingText() {
   const hr = new Date().getHours();
-  const base = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
+  const base = hr < 12
+    ? tr('Good morning', 'Chào buổi sáng')
+    : hr < 18
+      ? tr('Good afternoon', 'Chào buổi chiều')
+      : tr('Good evening', 'Chào buổi tối');
   const userNameEl = document.getElementById('user-name');
   const rawName = userNameEl?.textContent?.trim() || '';
   const firstName = rawName ? rawName.split(' ')[0] : '';
@@ -81,12 +85,17 @@ function renderDashboard() {
     const color = isPositive ? 'var(--income-color)' : 'var(--expense-color)';
     heroDeltaEl.innerHTML = `
       <span class="sensitive-amount" style="color:${color};font-weight:700">${arrow} ${sign}${fmtVND(balance)} (${savingsRate}%)</span>
-      <span style="margin-left:6px">net cashflow in ${fmtMonthLabel(ym)}</span>
+      <span style="margin-left:6px">${tr(`net cashflow in ${fmtMonthLabel(ym)}`, `dòng tiền ròng ${fmtMonthLabel(ym)}`)}</span>
     `;
   }
 
   const summEl = document.getElementById('dash-month-summary');
-  if (summEl) summEl.textContent = `Income: ${fmtVND(totalIncome)} · Expenses: ${fmtVND(totalExpense)} · Net: ${fmtVND(balance)}`;
+  if (summEl) {
+    summEl.textContent = tr(
+      `Income: ${fmtVND(totalIncome)} · Expenses: ${fmtVND(totalExpense)} · Net: ${fmtVND(balance)}`,
+      `Thu: ${fmtVND(totalIncome)} · Chi: ${fmtVND(totalExpense)} · Ròng: ${fmtVND(balance)}`
+    );
+  }
 
   const activeBudgetCount = Object.values(data.budgets || {}).filter(v => v > 0).length;
 
@@ -157,9 +166,9 @@ function renderDashboard() {
   sg.innerHTML = `
     <div class="summary-card income">
       <div>
-        <div class="sc-label">Total Income</div>
+        <div class="sc-label">${tr('Total Income', 'Tổng Thu Nhập')}</div>
         <div class="sc-value sensitive-amount" style="color:var(--income-color)">${fmtVND(totalIncome)}</div>
-        <div class="sc-sub">${monthTxs.filter(t=>t.type==='income').length} transactions</div>
+        <div class="sc-sub">${monthTxs.filter(t=>t.type==='income').length} ${tr('transactions', 'giao dịch')}</div>
       </div>
       <div class="sc-mini-viz" aria-hidden="true">
         ${incBarsHtml}
@@ -168,10 +177,10 @@ function renderDashboard() {
 
     <div class="summary-card expense">
       <div>
-        <div class="sc-label">Total Expenses</div>
+        <div class="sc-label">${tr('Total Expenses', 'Tổng Chi Tiêu')}</div>
         <div class="sc-value sensitive-amount" style="color:var(--expense-color)">${fmtVND(totalExpense)}</div>
-        <div class="sc-sub">${monthTxs.filter(t=>t.type==='expense').length} tx
-          <span class="trend ${expDiff > 0 ? 'down' : 'up'}">${expDiff > 0 ? '\u25b2' : '\u25bc'} ${Math.abs(expDiff)}% vs prev</span>
+        <div class="sc-sub">${monthTxs.filter(t=>t.type==='expense').length} ${tr('tx', 'GD')}
+          <span class="trend ${expDiff > 0 ? 'down' : 'up'}">${expDiff > 0 ? '\u25b2' : '\u25bc'} ${Math.abs(expDiff)}% ${tr('vs prev', 'so với T.trước')}</span>
         </div>
       </div>
       ${expSparklineHtml}
@@ -179,18 +188,18 @@ function renderDashboard() {
 
     <div class="summary-card balance">
       <div>
-        <div class="sc-label">Net Saved (${fmtMonthLabel(ym)})</div>
+        <div class="sc-label">${tr('Net Saved', 'Tiết Kiệm Ròng')} (${fmtMonthLabel(ym)})</div>
         <div class="sc-value sensitive-amount" style="color:${balance>=0?'var(--primary)':'var(--expense-color)'}">${fmtVND(balance)}</div>
-        <div class="sc-sub">${balance >= 0 ? 'Surplus' : 'Deficit'} this month</div>
+        <div class="sc-sub">${balance >= 0 ? tr('Surplus this month', 'Thặng dư tháng này') : tr('Deficit this month', 'Thâm hụt tháng này')}</div>
       </div>
       ${netSparklineHtml}
     </div>
 
     <div class="summary-card saving">
       <div>
-        <div class="sc-label">Savings Rate</div>
+        <div class="sc-label">${tr('Savings Rate', 'Tỷ Lệ Tiết Kiệm')}</div>
         <div class="sc-value" style="color:var(--saving-color)">${savingsRate}%</div>
-        <div class="sc-sub">${activeBudgetCount} active category budgets</div>
+        <div class="sc-sub">${activeBudgetCount} ${tr('active category budgets', 'ngân sách đang bật')}</div>
       </div>
       <div class="sc-mini-viz" aria-hidden="true">
         ${rateBarsHtml}
@@ -203,14 +212,14 @@ function renderDashboard() {
   const rl = document.getElementById('recent-list');
   if (rl) {
     if (recent.length === 0) {
-      rl.innerHTML = '<div class="empty-state"><div class="es-text">No transactions yet</div></div>';
+      rl.innerHTML = `<div class="empty-state"><div class="es-text">${tr('No transactions yet', 'Chưa có giao dịch nào')}</div></div>`;
     } else {
       rl.innerHTML = recent.map(t => {
         const cat = getCat(t.category, t.type);
         return `<div class="tx-item">
           <div class="tx-icon ${t.type}">${escapeHtml(cat.icon)}</div>
           <div class="tx-info">
-            <div class="tx-cat">${escapeHtml(cat.label)}${cat.active === false ? ' <span class="category-removed-label">(removed)</span>' : ''}</div>
+            <div class="tx-cat">${escapeHtml(cat.label)}${cat.active === false ? ` <span class="category-removed-label">${tr('(removed)', '(đã ẩn)')}</span>` : ''}</div>
             <div class="tx-note">${escapeHtml(t.note || '\u2014')}</div>
           </div>
           <div class="tx-right">
@@ -232,15 +241,15 @@ function renderDashboard() {
   if (ms) {
     ms.innerHTML = `
       <div class="stat-row">
-        <span class="stat-row-label">Total Income</span>
+        <span class="stat-row-label">${tr('Total Income', 'Tổng Thu Nhập')}</span>
         <span class="stat-row-value sensitive-amount" style="color:var(--income-color)">${fmtVND(totalIncome)}</span>
       </div>
       <div class="stat-row">
-        <span class="stat-row-label">Total Expenses</span>
+        <span class="stat-row-label">${tr('Total Expenses', 'Tổng Chi Tiêu')}</span>
         <span class="stat-row-value sensitive-amount" style="color:var(--expense-color)">${fmtVND(totalExpense)}</span>
       </div>
       <div class="stat-row">
-        <span class="stat-row-label">Net Savings</span>
+        <span class="stat-row-label">${tr('Net Savings', 'Tiết Kiệm Ròng')}</span>
         <span class="stat-row-value sensitive-amount" style="color:var(--primary)">${fmtVND(balance)}</span>
       </div>
       ${sorted.slice(0,3).map(([cat,amt]) => {
@@ -285,8 +294,8 @@ function renderDashDailyChart(data, ym) {
     data: {
       labels: days.map(d => d),
       datasets: [
-        { label: 'Expenses', data: expByDay, backgroundColor: 'rgba(244, 63, 94, 0.78)', borderRadius: 3, order: 2 },
-        { label: 'Income', data: incByDay, backgroundColor: isLight ? 'rgba(5, 150, 105, 0.82)' : 'rgba(0, 229, 153, 0.82)', borderRadius: 3, order: 2 }
+        { label: tr('Expenses', 'Chi tiêu'), data: expByDay, backgroundColor: 'rgba(244, 63, 94, 0.78)', borderRadius: 3, order: 2 },
+        { label: tr('Income', 'Thu nhập'), data: incByDay, backgroundColor: isLight ? 'rgba(5, 150, 105, 0.82)' : 'rgba(0, 229, 153, 0.82)', borderRadius: 3, order: 2 }
       ]
     },
     options: {
@@ -339,8 +348,8 @@ function renderDashMiniChart(data, ym) {
     data: {
       labels: monthList.map(fmtMonthLabel),
       datasets: [
-        { label: 'Income', data: incomes, backgroundColor: isLight ? 'rgba(5, 150, 105, 0.82)' : 'rgba(0, 229, 153, 0.82)', borderRadius: 4 },
-        { label: 'Expenses', data: expenses, backgroundColor: 'rgba(244, 63, 94, 0.78)', borderRadius: 4 },
+        { label: tr('Income', 'Thu nhập'), data: incomes, backgroundColor: isLight ? 'rgba(5, 150, 105, 0.82)' : 'rgba(0, 229, 153, 0.82)', borderRadius: 4 },
+        { label: tr('Expenses', 'Chi tiêu'), data: expenses, backgroundColor: 'rgba(244, 63, 94, 0.78)', borderRadius: 4 },
       ]
     },
     options: {
@@ -375,7 +384,7 @@ function renderDashPieChart(data, ym) {
   const legendEl = document.getElementById('dashPieLegend');
 
   if (entries.length === 0) {
-    if (legendEl) legendEl.innerHTML = '<span style="color:var(--text-muted);font-size:12px">No expenses this period</span>';
+    if (legendEl) legendEl.innerHTML = `<span style="color:var(--text-muted);font-size:12px">${tr('No expenses this period', 'Chưa có chi tiêu trong kỳ này')}</span>`;
     return;
   }
 

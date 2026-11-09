@@ -9,7 +9,9 @@ function renderExportStats() {
   const totInc = data.transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totExp = data.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
   const activeCategories = getAllCategories().length;
-  el.innerHTML = `${data.transactions.length} transactions &middot; ${activeCategories} active categories &middot; Income: ${fmtVND(totInc)} &middot; Expenses: ${fmtVND(totExp)}`;
+  el.innerHTML = isVi()
+    ? `${data.transactions.length} giao dịch &middot; ${activeCategories} danh mục đang dùng &middot; Thu: ${fmtVND(totInc)} &middot; Chi: ${fmtVND(totExp)}`
+    : `${data.transactions.length} transactions &middot; ${activeCategories} active categories &middot; Income: ${fmtVND(totInc)} &middot; Expenses: ${fmtVND(totExp)}`;
 }
 
 function exportData() {
@@ -23,7 +25,7 @@ function exportData() {
   a.download = `money_tracker_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast('Data exported', 'success');
+  showToast(tr('Data exported', 'Đã xuất bản sao lưu JSON'), 'success');
 }
 
 function importData(event) {
@@ -40,20 +42,20 @@ function importData(event) {
 
       saveData(data, { immediate: true });
       refreshAllUI();
-      showToast('Data imported successfully', 'success');
+      showToast(tr('Data imported successfully', 'Đã khôi phục dữ liệu thành công'), 'success');
     } catch(err) {
-      showToast('Invalid file format', 'error');
+      showToast(tr('Invalid file format', 'Định dạng file không hợp lệ'), 'error');
     }
   };
   reader.readAsText(file);
   event.target.value = '';
 }
 
-function clearData() {  if (!confirm('Are you sure you want to delete all data and reset categories? This cannot be undone.')) return;
+function clearData() {  if (!confirm(tr('Are you sure you want to delete all data and reset categories? This cannot be undone.', 'Bạn có chắc chắn muốn xóa toàn bộ dữ liệu và đặt lại danh mục không? Không thể hoàn tác.'))) return;
   const data = createEmptyAppData();
   saveData(data, { immediate: true });
 
   _dashYm = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
   refreshAllUI();
-  showToast('All data deleted', 'info');
+  showToast(tr('All data deleted', 'Đã xóa toàn bộ dữ liệu'), 'info');
 }

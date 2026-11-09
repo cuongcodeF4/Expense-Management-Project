@@ -150,10 +150,10 @@ function renderCharts() {
     data: {
       labels,
       datasets: [
-        { label: 'Income', data: incomes, backgroundColor: incCol, borderWidth: 0, borderRadius: 4, order: 2 },
-        { label: 'Expenses', data: expenses, backgroundColor: 'rgba(244, 63, 94, 0.78)', borderWidth: 0, borderRadius: 4, order: 2 },
+        { label: tr('Income', 'Thu nhập'), data: incomes, backgroundColor: incCol, borderWidth: 0, borderRadius: 4, order: 2 },
+        { label: tr('Expenses', 'Chi tiêu'), data: expenses, backgroundColor: 'rgba(244, 63, 94, 0.78)', borderWidth: 0, borderRadius: 4, order: 2 },
         {
-          label: 'Savings', data: savings, type: 'line',
+          label: tr('Savings', 'Tiết kiệm'), data: savings, type: 'line',
           borderColor: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.12)',
           pointBackgroundColor: '#FBBF24',
           pointRadius: totalMonths <= 24 ? 3 : 1.5,
@@ -253,8 +253,8 @@ function renderCharts() {
       data: {
         labels: compareLabels,
         datasets: [
-          { label: 'Income', data: compareInc, backgroundColor: incCol, borderRadius: 4 },
-          { label: 'Expenses', data: compareExp, backgroundColor: 'rgba(244, 63, 94, 0.78)', borderRadius: 4 },
+          { label: tr('Income', 'Thu nhập'), data: compareInc, backgroundColor: incCol, borderRadius: 4 },
+          { label: tr('Expenses', 'Chi tiêu'), data: compareExp, backgroundColor: 'rgba(244, 63, 94, 0.78)', borderRadius: 4 },
         ]
       },
       options: {
@@ -288,14 +288,14 @@ function renderCharts() {
         labels,
         datasets: [
           {
-            label: 'Monthly net savings', data: savings,
+            label: tr('Monthly net savings', 'Tiết kiệm ròng tháng'), data: savings,
             borderColor: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.12)',
             fill: true, tension: 0.35, borderWidth: 2,
             pointRadius: totalMonths <= 24 ? 3 : 1,
             pointBackgroundColor: '#FBBF24', yAxisID: 'y'
           },
           {
-            label: 'Cumulative', data: cumSavings,
+            label: tr('Cumulative', 'Tích lũy cộng dồn'), data: cumSavings,
             borderColor: isLight ? '#059669' : '#00E599', backgroundColor: isLight ? 'rgba(5, 150, 105, 0.10)' : 'rgba(0, 229, 153, 0.10)',
             fill: true, tension: 0.35, borderWidth: 2,
             pointRadius: totalMonths <= 24 ? 3 : 1,

@@ -15,10 +15,297 @@ const THEME_MODE_KEY = 'expense_tracker_theme';
 const SIDEBAR_COLLAPSED_KEY = 'expense_tracker_sidebar_collapsed';
 const UI_ZOOM_KEY = 'expense_tracker_ui_zoom';
 const ONBOARDING_TOUR_KEY = 'expense_tracker_onboarding_v1';
+const LANG_MODE_KEY = 'expense_tracker_lang';
 let _uiZoomPct = 100;
+let _lang = 'vi';
 
-const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_SHORT_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_FULL_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_SHORT_VI = ['Th1','Th2','Th3','Th4','Th5','Th6','Th7','Th8','Th9','Th10','Th11','Th12'];
+const MONTHS_FULL_VI = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+
+const MONTHS_SHORT = [...MONTHS_SHORT_VI];
+const MONTHS_FULL = [...MONTHS_FULL_VI];
+
+function isVi() {
+  return _lang === 'vi';
+}
+
+function tr(en, vi) {
+  return _lang === 'vi' ? vi : en;
+}
+
+function syncMonthNames() {
+  const srcShort = _lang === 'vi' ? MONTHS_SHORT_VI : MONTHS_SHORT_EN;
+  const srcFull = _lang === 'vi' ? MONTHS_FULL_VI : MONTHS_FULL_EN;
+  for (let i = 0; i < 12; i++) {
+    MONTHS_SHORT[i] = srcShort[i];
+    MONTHS_FULL[i] = srcFull[i];
+  }
+}
+
+const I18N_VI = {
+  // Login & Sidebar
+  'Sign in to sync your financial portfolio across all your devices': 'Đăng nhập để đồng bộ danh mục tài chính trên mọi thiết bị của bạn',
+  'Sign in with Google': 'Đăng nhập bằng Google',
+  'Your data is encrypted and stored securely on Firebase.': 'Dữ liệu của bạn được mã hóa và lưu trữ an toàn trên Firebase.',
+  'Personal Finance': 'Tài Chính Cá Nhân',
+  'Overview': 'Tổng quan',
+  'Dashboard': 'Bảng điều khiển',
+  'Transactions': 'Giao dịch',
+  'Add Transaction': 'Thêm giao dịch',
+  'All Transactions': 'Tất cả giao dịch',
+  'Analytics': 'Phân tích',
+  'Monthly Budget': 'Ngân sách tháng',
+  'Investment Portfolio': 'Danh mục đầu tư',
+  'Data & Sync': 'Dữ liệu & Sao lưu',
+  'Cloud Backup': 'Sao lưu đám mây',
+  'Signed In': 'Đã đăng nhập',
+  'Sign Out': 'Đăng xuất',
+  'v3.0 · Tap to Update': 'v3.0 · Chạm để cập nhật',
+
+  // Topbar & Mobile Bottom Nav
+  'Saving...': 'Đang lưu...',
+  'Saved': 'Đã lưu',
+  'Wallet': 'Ví ròng',
+  '+ Add': '+ Thêm',
+  'Home': 'Trang chủ',
+  'History': 'Lịch sử',
+  'Charts': 'Biểu đồ',
+  'Add': 'Thêm',
+  'Budget': 'Ngân sách',
+  'Invest': 'Đầu tư',
+  'Backup': 'Sao lưu',
+
+  // Dashboard
+  'Import old data': 'Nhập dữ liệu cũ',
+  'Welcome back': 'Chào mừng trở lại',
+  'Period:': 'Kỳ:',
+  'Daily Cashflow Pulse': 'Nhịp Dòng Tiền Theo Ngày',
+  '6-Month Trajectory': 'Xu Hướng 6 Tháng Gần Nhất',
+  'Recent Transactions': 'Giao Dịch Gần Đây',
+  'View All ›': 'Xem tất cả ›',
+  'Spending by Category': 'Chi Tiêu Theo Danh Mục',
+  'Monthly Summary': 'Tóm Tắt Tháng',
+
+  // Add Transaction
+  'Record Transaction': 'Ghi Chép Giao Dịch',
+  'Transaction Type': 'Loại giao dịch',
+  '↓ Income': '↓ Thu nhập',
+  '↑ Expense': '↑ Chi tiêu',
+  'Amount (VND)': 'Số tiền (VND)',
+  'Category': 'Danh mục',
+  'Date': 'Ngày',
+  'Note': 'Ghi chú',
+  'Enter a note...': 'Nhập ghi chú...',
+  '✦ Save Transaction': '✦ Lưu Giao Dịch',
+
+  // Transaction List
+  '🔍 Search category, note, or amount...': '🔍 Tìm danh mục, ghi chú hoặc số tiền...',
+  'All types': 'Tất cả loại',
+  'Income': 'Thu nhập',
+  'Expense': 'Chi tiêu',
+  'All categories': 'Tất cả danh mục',
+  'All months': 'Tất cả các tháng',
+  'Clear': 'Xóa lọc',
+  'Type': 'Loại',
+  'Amount': 'Số tiền',
+  'No matching transactions': 'Không có giao dịch phù hợp',
+
+  // Charts & Analytics
+  'Charts & Analytics': 'Biểu Đồ & Phân Tích',
+  '6 months': '6 tháng',
+  '1 year': '1 năm',
+  '2 years': '2 năm',
+  '5 years': '5 năm',
+  '10 years': '10 năm',
+  'Custom': 'Tùy chọn',
+  'From:': 'Từ:',
+  'To:': 'Đến:',
+  'Refresh': 'Làm mới',
+  'Income, Expenses & Net Savings Replay': 'Biến Động Thu Nhập, Chi Tiêu & Tiết Kiệm Ròng',
+  'Income vs. Expenses': 'So Sánh Thu Nhập & Chi Tiêu',
+  'Net Savings & Cumulative Wealth Trend': 'Tiết Kiệm Ròng & Xu Hướng Tích Lũy Tài Sản',
+
+  // Monthly Budget
+  'Set default spending limits or customize budgets for any specific past month.': 'Thiết lập hạn mức chi tiêu mặc định hoặc tùy chỉnh ngân sách riêng cho từng tháng.',
+  'Editing Period:': 'Kỳ chỉnh sửa:',
+  '↺ Reset Month to Default': '↺ Đặt lại tháng về mặc định',
+  'Manage categories': 'Quản lý danh mục',
+  'Add, remove, or restore': 'Thêm, ẩn hoặc khôi phục',
+  'Add income or expense categories for transactions and reports. Expense categories can also have budgets. Removed categories stay attached to past transactions and analytics, and can be restored.': 'Thêm danh mục thu nhập hoặc chi tiêu cho giao dịch và báo cáo. Danh mục chi tiêu có thể đặt ngân sách. Danh mục đã ẩn vẫn giữ nguyên trong giao dịch cũ và có thể khôi phục bất kỳ lúc nào.',
+  'Icon': 'Biểu tượng',
+  'e.g. 🐾': 'VD: 🐾',
+  'Category name': 'Tên danh mục',
+  'e.g. Pets': 'VD: Thú cưng',
+  '+ Add category': '+ Thêm danh mục',
+  'Remaining Budget Ledger': 'Sổ Cái Ngân Sách Còn Lại (Ledger)',
+  'Tip: Click any cell in the table to edit the budget for that specific month & category.': 'Mẹo: Nhấn vào bất kỳ ô nào trong bảng để sửa ngân sách riêng cho tháng & danh mục đó.',
+
+  // Investment Portfolio
+  'Track your investments across Gold, Bitcoin (BTC), Mutual Funds / ETFs, Stocks, and custom assets. Edit amounts directly or tap any asset to log monthly valuations & inspect ROI (%) trends.': 'Theo dõi danh mục đầu tư Vàng, Bitcoin (BTC), Quỹ mở / ETF, Cổ phiếu và tài sản tùy chỉnh. Sửa số tiền trực tiếp hoặc nhấn vào từng mục để ghi nhận giá trị theo tháng & xem biểu đồ Lãi/Lỗ ROI (%).',
+  '+ Add Investment Category': '+ Thêm Danh Mục Đầu Tư',
+  'Category Name': 'Tên danh mục đầu tư',
+  'e.g. Gold, BTC, VFMVF4 ETF...': 'VD: Vàng, BTC, Quỹ ETF...',
+  'Initial Invested (VND)': 'Vốn đầu tư ban đầu (VND)',
+  'Current Value (VND)': 'Giá trị hiện tại (VND)',
+  '+ Add Asset': '+ Thêm Tài Sản',
+  'Asset Monthly Valuation & ROI (%)': 'Định Giá Theo Tháng & Lãi/Lỗ ROI (%)',
+  '▲ Collapse': '▲ Thu gọn',
+  'Initial Invested Capital (VND)': 'Vốn đầu tư ban đầu (VND)',
+  'Valuation Month': 'Tháng định giá',
+  'Current Value in Month (VND)': 'Giá trị trong tháng (VND)',
+  'Save Monthly Valuation': 'Lưu Định Giá Tháng',
+  'Selected Asset Profit / Loss (%) Curve': 'Đường Cong Lãi / Lỗ (%) Của Tài Sản Đang Chọn',
+  'Monthly Valuation History': 'Lịch Sử Định Giá Theo Tháng',
+  'Month': 'Tháng',
+  'Invested': 'Vốn đầu tư',
+  'Market Value': 'Giá trị thị trường',
+  'Profit / Loss': 'Lãi / Lỗ',
+  'ROI (%)': 'ROI (%)',
+  'Actions': 'Thao tác',
+  'All Assets Monthly Profit / Loss (%) Comparison': 'So Sánh Lãi / Lỗ (%) Theo Tháng Giữa Các Tài Sản',
+  'Multi-line monthly ROI (%) trajectory across all investment categories': 'Biểu đồ đa đường biểu diễn tỷ suất sinh lời ROI (%) hàng tháng của tất cả danh mục đầu tư',
+  'Horizon:': 'Khung thời gian:',
+  '12 months': '12 tháng',
+  '24 months': '24 tháng',
+  'All recorded months': 'Tất cả tháng đã lưu',
+  'Portfolio Allocation & ROI Breakdown': 'Phân Bổ Danh Mục & Chi Tiết Lãi/Lỗ ROI',
+  'Investment Category': 'Danh mục đầu tư',
+  'Initial Invested': 'Vốn ban đầu',
+  'Current Value': 'Giá trị hiện tại',
+  'Net Profit / Loss': 'Lãi / Lỗ ròng',
+  '% of Total Portfolio': '% Tổng danh mục',
+  'Detail': 'Chi tiết',
+  'Visual Portfolio Weight (%)': 'Tỷ Trọng Danh Mục Đầu Tư (%)',
+
+  // Cloud Backup & Restore
+  'Cloud Backup & Restore': 'Sao Lưu & Khôi Phục Dữ Liệu',
+  '↓ Export Cloud Snapshot': '↓ Xuất Bản Sao Lưu (JSON)',
+  'Download all your transactions, budgets, and categories as a JSON backup file.': 'Tải xuống toàn bộ giao dịch, ngân sách và danh mục dưới dạng file sao lưu JSON.',
+  'Download JSON Backup': 'Tải Xuống Bản Sao Lưu JSON',
+  '↑ Restore from Snapshot': '↑ Khôi Phục Từ Bản Sao Lưu',
+  'Restore data from a previously exported JSON backup file.': 'Khôi phục dữ liệu từ file sao lưu JSON đã xuất trước đó.',
+  'Click to select JSON file': 'Nhấn để chọn file JSON',
+  'Current data will be replaced': 'Dữ liệu hiện tại sẽ được thay thế',
+  'Reset Portfolio Data': 'Xóa Toàn Bộ Dữ Liệu',
+  'Permanently delete all transactions, budgets, and custom category settings. This cannot be undone.': 'Xóa vĩnh viễn toàn bộ giao dịch, ngân sách và cài đặt danh mục. Không thể hoàn tác.',
+  'Delete All Data': 'Xóa Tất Cả Dữ Liệu',
+
+  // Modal defaults
+  'Confirm Delete': 'Xác Nhận Xóa',
+  'Are you sure you want to delete this transaction?': 'Bạn có chắc chắn muốn xóa giao dịch này không?',
+  'Cancel': 'Hủy',
+  'Delete': 'Xóa'
+};
+
+function applyStaticTranslations(root = document.body) {
+  if (!root) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  let node;
+  while ((node = walker.nextNode())) {
+    const parentTag = node.parentElement?.tagName;
+    if (parentTag === 'SCRIPT' || parentTag === 'STYLE') continue;
+    const raw = node.nodeValue || '';
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+    if (node._origEn === undefined) {
+      if (Object.prototype.hasOwnProperty.call(I18N_VI, trimmed)) {
+        node._origEn = trimmed;
+        node._leadWs = raw.slice(0, raw.indexOf(trimmed));
+        node._trailWs = raw.slice(raw.indexOf(trimmed) + trimmed.length);
+      }
+    }
+    if (node._origEn !== undefined) {
+      const targetText = _lang === 'vi' ? (I18N_VI[node._origEn] || node._origEn) : node._origEn;
+      node.nodeValue = `${node._leadWs || ''}${targetText}${node._trailWs || ''}`;
+    }
+  }
+
+  root.querySelectorAll('[placeholder], [title]').forEach(el => {
+    if (el.hasAttribute('placeholder')) {
+      const p = el.getAttribute('placeholder');
+      if (el._origPlaceholder === undefined && Object.prototype.hasOwnProperty.call(I18N_VI, p)) {
+        el._origPlaceholder = p;
+      }
+      if (el._origPlaceholder !== undefined) {
+        el.setAttribute('placeholder', _lang === 'vi' ? (I18N_VI[el._origPlaceholder] || el._origPlaceholder) : el._origPlaceholder);
+      }
+    }
+    if (el.hasAttribute('title')) {
+      const t = el.getAttribute('title');
+      if (el._origTitle === undefined && Object.prototype.hasOwnProperty.call(I18N_VI, t)) {
+        el._origTitle = t;
+      }
+      if (el._origTitle !== undefined) {
+        el.setAttribute('title', _lang === 'vi' ? (I18N_VI[el._origTitle] || el._origTitle) : el._origTitle);
+      }
+    }
+  });
+
+  // Special case for complex paragraph in Budget section
+  const ledgerTipP = document.querySelector('#page-budget > div[style*="margin-top:28px"] > p');
+  if (ledgerTipP) {
+    ledgerTipP.innerHTML = _lang === 'vi'
+      ? 'Thặng dư / thâm hụt ngân sách mỗi tháng theo từng danh mục. Số dương = chi dưới ngân sách, số âm = vượt ngân sách. <strong>Mẹo: Nhấn vào bất kỳ ô nào trong bảng để sửa ngân sách riêng cho tháng &amp; danh mục đó.</strong>'
+      : 'Monthly surplus/deficit per category. Positive = under budget, negative = over budget. <strong>Tip: Click any cell in the table to edit the budget for that specific month &amp; category.</strong>';
+  }
+}
+
+function updateLangBtnLabel() {
+  const btn = document.getElementById('lang-toggle-btn');
+  if (!btn) return;
+  btn.innerHTML = _lang === 'vi' ? '🇻🇳 VI' : '🇬🇧 EN';
+  btn.title = _lang === 'vi'
+    ? 'Đang dùng Tiếng Việt · Nhấn để chuyển sang English'
+    : 'Current: English · Click to switch to Tiếng Việt';
+}
+
+function initLanguage() {
+  try {
+    const saved = localStorage.getItem(LANG_MODE_KEY);
+    _lang = (saved === 'en' || saved === 'vi') ? saved : 'vi';
+  } catch(e) {
+    _lang = 'vi';
+  }
+  document.documentElement.lang = _lang;
+  syncMonthNames();
+  updateLangBtnLabel();
+  applyStaticTranslations(document.body);
+}
+
+function toggleLanguage() {
+  _lang = _lang === 'vi' ? 'en' : 'vi';
+  try { localStorage.setItem(LANG_MODE_KEY, _lang); } catch(e) {}
+  document.documentElement.lang = _lang;
+  syncMonthNames();
+  updateLangBtnLabel();
+  updateThemeBtnLabel(document.body.classList.contains('light-mode'));
+  applyStaticTranslations(document.body);
+
+  updateCurrentMonthLabel();
+  const activePage = document.querySelector('.page.active');
+  const currentPageKey = activePage ? activePage.id.replace('page-', '') : 'dashboard';
+  const titleEl = document.getElementById('page-title');
+  if (titleEl) titleEl.textContent = getPageTitle(currentPageKey);
+
+  if (typeof refreshCategoryControls === 'function') refreshCategoryControls();
+  if (typeof populateFilterOptions === 'function') {
+    const fm = document.getElementById('filter-month');
+    const savedVal = fm ? fm.value : '';
+    if (fm) fm.innerHTML = `<option value="">${tr('All months', 'Tất cả các tháng')}</option>`;
+    populateFilterOptions();
+    if (fm && savedVal) fm.value = savedVal;
+  }
+  if (typeof populateDashMonthSelect === 'function') populateDashMonthSelect();
+  if (typeof renderDashboard === 'function') renderDashboard();
+  if (typeof renderList === 'function') renderList();
+  if (activePage?.id === 'page-charts' && typeof renderCharts === 'function') renderCharts();
+  if (typeof renderBudget === 'function') renderBudget();
+  if (typeof renderPortfolio === 'function') renderPortfolio();
+  if (typeof renderExportStats === 'function') renderExportStats();
+  if (_tourActive) renderOnboardingStep();
+}
 
 function initSidebarCollapse() {
   try {
@@ -184,8 +471,10 @@ function bindChartTouchInspector(chart) {
   if (cardBody && !readout) {
     readout = document.createElement('div');
     readout.className = 'chart-active-readout';
-    readout.innerHTML = '<span class="chart-readout-hint">👆 Tap or hover on any bar/slice to view exact amount</span>';
+    readout.innerHTML = `<span class="chart-readout-hint">${tr('👆 Tap or hover on any bar/slice to view exact amount', '👆 Chạm hoặc di chuột vào cột/múi biểu đồ để xem số tiền')}</span>`;
     cardBody.insertBefore(readout, cardBody.firstChild);
+  } else if (readout && !readout.classList.contains('active')) {
+    readout.innerHTML = `<span class="chart-readout-hint">${tr('👆 Tap or hover on any bar/slice to view exact amount', '👆 Chạm hoặc di chuột vào cột/múi biểu đồ để xem số tiền')}</span>`;
   }
 
   function renderReadoutForIndex(idx, isDoughnut) {
@@ -193,7 +482,7 @@ function bindChartTouchInspector(chart) {
     const labels = chart.data?.labels || [];
     const rawLabel = labels[idx] !== undefined ? String(labels[idx]) : '';
     const titleLabel = (canvas.id === 'dashDailyChart' && /^\d+$/.test(rawLabel))
-      ? `Day ${rawLabel}`
+      ? `${tr('Day', 'Ngày')} ${rawLabel}`
       : rawLabel;
 
     if (isDoughnut) {
@@ -373,8 +662,8 @@ function updateThemeBtnLabel(isLight) {
   const btn = document.getElementById('theme-toggle-btn');
   if (btn) {
     btn.innerHTML = isLight
-      ? '<span class="theme-btn-icon">🌙</span><span class="theme-btn-text"> Dark</span>'
-      : '<span class="theme-btn-icon">☀️</span><span class="theme-btn-text"> Light</span>';
+      ? `<span class="theme-btn-icon">🌙</span><span class="theme-btn-text"> ${tr('Dark', 'Tối')}</span>`
+      : `<span class="theme-btn-icon">☀️</span><span class="theme-btn-text"> ${tr('Light', 'Sáng')}</span>`;
   }
 }
 
@@ -399,13 +688,15 @@ function toggleTheme() {
   if (activePage?.id === 'page-portfolio' && typeof renderPortfolio === 'function') renderPortfolio();
 }
 
-// Init theme, sidebar & zoom immediately on script load
+// Init language, theme, sidebar & zoom immediately on script load
+initLanguage();
 initTheme();
 initSidebarCollapse();
 initUiZoom();
 
 // ── Init ──
 async function initApp() {
+  initLanguage();
   initTheme();
   initSidebarCollapse();
   initUiZoom();
@@ -495,7 +786,7 @@ function updateCategorySelect() {
   if (categories.length === 0) {
     const option = document.createElement('option');
     option.value = '';
-    option.textContent = 'No categories — add one in Budget';
+    option.textContent = tr('No categories — add one in Budget', 'Chưa có danh mục — hãy thêm trong Ngân sách');
     sel.appendChild(option);
   } else if (categories.some(category => category.id === selected)) {
     sel.value = selected;
@@ -508,7 +799,11 @@ function populateFilterOptions() {
   if (!sel) return;
   const months = [...new Set(data.transactions.map(t => t.date.slice(0,7)))].sort().reverse();
   months.forEach(m => {
-    if (sel.querySelector(`option[value="${m}"]`)) return;
+    const existing = sel.querySelector(`option[value="${m}"]`);
+    if (existing) {
+      existing.textContent = fmtMonthLabel(m);
+      return;
+    }
     const o = document.createElement('option');
     o.value = m;
     o.textContent = fmtMonthLabel(m);
@@ -527,6 +822,20 @@ const pageTitles = {
   export: 'Cloud Backup',
 };
 
+const pageTitlesVi = {
+  dashboard: 'Bảng Điều Khiển',
+  add: 'Thêm Giao Dịch',
+  list: 'Lịch Sử Giao Dịch',
+  charts: 'Biểu Đồ & Phân Tích',
+  budget: 'Ngân Sách Tháng',
+  portfolio: 'Danh Mục Đầu Tư',
+  export: 'Sao Lưu Đám Mây',
+};
+
+function getPageTitle(page) {
+  return _lang === 'vi' ? (pageTitlesVi[page] || pageTitles[page]) : pageTitles[page];
+}
+
 function navigate(page) {
   document.getElementById('mobile-bottom-nav')?.classList.remove('nav-hidden');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -536,7 +845,7 @@ function navigate(page) {
   const navEl = document.querySelector(`#sidebar [onclick="navigate('${page}')"]`);
   if (navEl) navEl.classList.add('active');
   const titleEl = document.getElementById('page-title');
-  if (titleEl) titleEl.textContent = pageTitles[page];
+  if (titleEl) titleEl.textContent = getPageTitle(page);
   closeSidebar();
   window.scrollTo({ top: 0, behavior: 'instant' });
 
@@ -565,12 +874,18 @@ function fmtVND(v) {
 
 function fmtDate(s) {
   const [yr, mo, dy] = s.split('-');
-  return `${MONTHS_SHORT[parseInt(mo)-1]} ${parseInt(dy)}, ${yr}`;
+  if (_lang === 'vi') {
+    return `${parseInt(dy, 10)}/${parseInt(mo, 10)}/${yr}`;
+  }
+  return `${MONTHS_SHORT_EN[parseInt(mo, 10)-1]} ${parseInt(dy, 10)}, ${yr}`;
 }
 
 function fmtMonthLabel(ym) {
   const [yr, mo] = ym.split('-');
-  return `${MONTHS_SHORT[parseInt(mo)-1]} '${yr.slice(2)}`;
+  if (_lang === 'vi') {
+    return `Th${parseInt(mo, 10)}/${yr.slice(2)}`;
+  }
+  return `${MONTHS_SHORT_EN[parseInt(mo, 10)-1]} '${yr.slice(2)}`;
 }
 
 // ── Toast ──
@@ -647,7 +962,7 @@ function initAmountInputFormatting() {
 }
 
 async function forceUpdateApp() {
-  showToast('Checking for latest version...', 'info');
+  showToast(tr('Checking for latest version...', 'Đang kiểm tra phiên bản mới nhất...'), 'info');
   try {
     if ('serviceWorker' in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();
@@ -670,55 +985,73 @@ const ONBOARDING_STEPS = [
     page: 'dashboard',
     selector: '.gfx-hero-banner',
     title: '💰 Tổng Số Dư & Chế Độ Ẩn Tiền',
-    desc: 'Hiển thị tổng số dư ròng toàn thời gian của bạn. Nhấn vào biểu tượng con mắt màu xanh ngọc bên cạnh lời chào để làm mờ toàn bộ số tiền nhạy cảm trên ứng dụng.'
+    desc: 'Hiển thị tổng số dư ròng toàn thời gian của bạn. Nhấn vào biểu tượng con mắt màu xanh ngọc bên cạnh lời chào để làm mờ toàn bộ số tiền nhạy cảm trên ứng dụng.',
+    titleEn: '💰 Total Net Balance & Privacy Mask',
+    descEn: 'Displays your all-time net portfolio balance. Tap the emerald eye icon next to the greeting to blur all sensitive monetary values across the app.'
   },
   {
     page: 'dashboard',
     selector: '#summary-grid',
     title: '📊 Chỉ Số Tháng & Biểu Đồ Tương Tác',
-    desc: 'Theo dõi nhanh Tổng Thu, Tổng Chi, Tiết Kiệm Ròng và Tỷ Lệ Tiết Kiệm trong tháng. Chạm hoặc di chuột vào bất kỳ cột biểu đồ nào bên dưới để xem số tiền chính xác.'
+    desc: 'Theo dõi nhanh Tổng Thu, Tổng Chi, Tiết Kiệm Ròng và Tỷ Lệ Tiết Kiệm trong tháng. Chạm hoặc di chuột vào bất kỳ cột biểu đồ nào bên dưới để xem số tiền chính xác.',
+    titleEn: '📊 Monthly KPIs & Interactive Charts',
+    descEn: 'Track Total Income, Total Expenses, Net Saved, and Savings Rate for the selected month. Tap or hover over any chart bar below to inspect exact figures.'
   },
   {
     page: 'add',
     selector: '#page-add .card',
     title: '➕ Ghi Chép Giao Dịch Thu / Chi',
-    desc: 'Tạo nhanh khoản Thu nhập (Income) hoặc Chi tiêu (Expense), chọn danh mục, ngày tháng và ghi chú. Số tiền nhập vào được tự động phân cách hàng nghìn.'
+    desc: 'Tạo nhanh khoản Thu nhập (Income) hoặc Chi tiêu (Expense), chọn danh mục, ngày tháng và ghi chú. Số tiền nhập vào được tự động phân cách hàng nghìn.',
+    titleEn: '➕ Record Income & Expense Transactions',
+    descEn: 'Quickly log an Income or Expense entry, choose a category, date, and note. Amounts are automatically formatted with thousand separators.'
   },
   {
     page: 'list',
     selector: '#page-list .filter-bar',
     title: '🔍 Lịch Sử & Bộ Lọc Thông Minh',
-    desc: 'Tìm kiếm giao dịch theo ghi chú, danh mục hoặc số tiền; lọc theo loại Thu/Chi và tháng. Bạn có thể chỉnh sửa hoặc xóa bất kỳ giao dịch nào ngay trong danh sách.'
+    desc: 'Tìm kiếm giao dịch theo ghi chú, danh mục hoặc số tiền; lọc theo loại Thu/Chi và tháng. Bạn có thể chỉnh sửa hoặc xóa bất kỳ giao dịch nào ngay trong danh sách.',
+    titleEn: '🔍 Smart Search & Transaction History',
+    descEn: 'Search transactions by category, note, or amount; filter by type and month. You can edit or delete any transaction directly from the list.'
   },
   {
     page: 'charts',
     selector: '#page-charts .chart-controls-row',
     title: '📈 Phân Tích Xu Hướng Dài Hạn',
-    desc: 'Xem biểu đồ so sánh Thu - Chi, cơ cấu chi tiêu theo danh mục và xu hướng tích lũy tài sản từ 6 tháng đến 10 năm hoặc tùy chọn khoảng thời gian.'
+    desc: 'Xem biểu đồ so sánh Thu - Chi, cơ cấu chi tiêu theo danh mục và xu hướng tích lũy tài sản từ 6 tháng đến 10 năm hoặc tùy chọn khoảng thời gian.',
+    titleEn: '📈 Long-Term Analytics & Wealth Trends',
+    descEn: 'Inspect Income vs. Expense comparisons, category spending breakdowns, and cumulative wealth trends from 6 months up to 10 years or a custom date range.'
   },
   {
     page: 'budget',
     selector: '#page-budget .dash-month-bar',
     title: '🎯 Ngân Sách Tháng & Sổ Cái (Ledger)',
-    desc: 'Thiết lập hạn mức chi tiêu cho từng danh mục, quản lý danh mục tùy chỉnh và nhấn trực tiếp vào ô bất kỳ trong bảng Remaining Budget Ledger bên dưới để chỉnh ngân sách riêng cho từng tháng.'
+    desc: 'Thiết lập hạn mức chi tiêu cho từng danh mục, quản lý danh mục tùy chỉnh và nhấn trực tiếp vào ô bất kỳ trong bảng Remaining Budget Ledger bên dưới để chỉnh ngân sách riêng cho từng tháng.',
+    titleEn: '🎯 Monthly Budgets & Remaining Budget Ledger',
+    descEn: 'Set spending limits per category, manage custom categories, and click any cell in the Remaining Budget Ledger below to customize budgets for specific months.'
   },
   {
     page: 'portfolio',
     selector: '#portfolio-kpi-grid',
     title: '💎 Danh Mục Đầu Tư & Lãi/Lỗ ROI (%)',
-    desc: 'Theo dõi Vàng, BTC, ETF, Cổ phiếu hoặc nhấn "+ Add Investment Category" để thêm mới. Nhấn vào bất kỳ ô mục đầu tư nào để ghi nhận giá trị theo tháng và mở biểu đồ đường cong Lãi/Lỗ (%).'
+    desc: 'Theo dõi Vàng, BTC, ETF, Cổ phiếu hoặc nhấn "+ Thêm Danh Mục Đầu Tư" để tạo mới. Nhấn vào bất kỳ ô mục đầu tư nào để ghi nhận giá trị theo tháng và mở biểu đồ đường cong Lãi/Lỗ (%).',
+    titleEn: '💎 Investment Portfolio & Monthly ROI (%)',
+    descEn: 'Track Gold, BTC, ETFs, Stocks, or tap "+ Add Investment Category" to create custom assets. Tap any asset card to log monthly valuations and inspect its ROI (%) curve.'
   },
   {
     page: 'export',
     selector: '#page-export .export-grid',
     title: '☁️ Sao Lưu & Khôi Phục Dữ Liệu (Backup)',
-    desc: 'Tải xuống toàn bộ giao dịch, ngân sách và danh mục dưới dạng file JSON để sao lưu an toàn, hoặc khôi phục lại dữ liệu từ file JSON bất kỳ lúc nào.'
+    desc: 'Tải xuống toàn bộ giao dịch, ngân sách và danh mục dưới dạng file JSON để sao lưu an toàn, hoặc khôi phục lại dữ liệu từ file JSON bất kỳ lúc nào.',
+    titleEn: '☁️ Cloud Backup & JSON Restore',
+    descEn: 'Download all your transactions, budgets, and categories as a JSON backup snapshot, or restore your portfolio from a saved JSON file anytime.'
   },
   {
     page: 'dashboard',
     selector: '.topbar-actions',
-    title: '✨ Tùy Chỉnh Hiển Thị & Xem Lại Hướng Dẫn',
-    desc: 'Phóng to/thu nhỏ giao diện (− / +), chuyển đổi nền Sáng/Tối (Light / Dark), hoặc nhấn nút "?" trên thanh công cụ bất kỳ lúc nào để mở lại hướng dẫn này.'
+    title: '✨ Ngôn Ngữ (VI/EN), Giao Diện & Hướng Dẫn',
+    desc: 'Chuyển đổi ngôn ngữ Tiếng Việt / Tiếng Anh (VI / EN), phóng to/thu nhỏ giao diện (− / +), đổi nền Sáng/Tối, hoặc nhấn nút "?" bất kỳ lúc nào để xem lại hướng dẫn này.',
+    titleEn: '✨ Language (VI/EN), Theme, Zoom & Tour',
+    descEn: 'Switch between Vietnamese and English (VI / EN), adjust interface zoom (− / +), toggle Light/Dark mode, or tap "?" anytime to replay this tour.'
   }
 ];
 
@@ -780,10 +1113,12 @@ function renderOnboardingStep() {
   const dotsEl = document.getElementById('tour-dots');
   const prevBtn = document.getElementById('tour-prev-btn');
   const nextBtn = document.getElementById('tour-next-btn');
+  const skipBtn = document.querySelector('#onboarding-tour .tour-skip-btn');
 
   if (badgeEl) badgeEl.textContent = `${_tourStepIdx + 1} / ${ONBOARDING_STEPS.length}`;
-  if (titleEl) titleEl.textContent = step.title;
-  if (descEl) descEl.textContent = step.desc;
+  if (titleEl) titleEl.textContent = _lang === 'vi' ? step.title : (step.titleEn || step.title);
+  if (descEl) descEl.textContent = _lang === 'vi' ? step.desc : (step.descEn || step.desc);
+  if (skipBtn) skipBtn.textContent = tr('Skip ✕', 'Bỏ qua ✕');
   if (dotsEl) {
     dotsEl.innerHTML = ONBOARDING_STEPS.map((_, i) =>
       `<span class="tour-dot ${i === _tourStepIdx ? 'active' : ''}"></span>`
@@ -791,9 +1126,12 @@ function renderOnboardingStep() {
   }
   if (prevBtn) {
     prevBtn.style.visibility = _tourStepIdx === 0 ? 'hidden' : 'visible';
+    prevBtn.textContent = tr('‹ Back', '‹ Trước');
   }
   if (nextBtn) {
-    nextBtn.textContent = _tourStepIdx === ONBOARDING_STEPS.length - 1 ? 'Hoàn tất ✓' : 'Tiếp ›';
+    nextBtn.textContent = _tourStepIdx === ONBOARDING_STEPS.length - 1
+      ? tr('Done ✓', 'Hoàn tất ✓')
+      : tr('Next ›', 'Tiếp ›');
   }
 
   requestAnimationFrame(() => {

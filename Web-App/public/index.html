@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/app.css?v=31">
+<link rel="stylesheet" href="/assets/css/app.css?v=32">
 
 <!-- Firebase SDKs (compat v10) -->
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -165,7 +165,7 @@
   </div>
   <div class="sidebar-footer" role="button" tabindex="0" onclick="forceUpdateApp()" title="Tap to force check &amp; update app to latest version" style="cursor:pointer">
     <span class="live-status-dot"></span>
-    <span class="sidebar-footer-text">v2.9 · Tap to Update</span>
+    <span class="sidebar-footer-text">v3.0 · Tap to Update</span>
   </div>
 </nav>
 
@@ -194,6 +194,9 @@
         <button type="button" class="zoom-reset-btn" id="ui-zoom-label" onclick="resetUiZoom()" title="Reset Zoom to 100%" aria-label="Reset zoom">100%</button>
         <button type="button" class="zoom-step-btn" onclick="adjustUiZoom(10)" title="Zoom In" aria-label="Zoom in">+</button>
       </div>
+      <button type="button" class="btn btn-outline lang-toggle-btn" id="lang-toggle-btn" onclick="toggleLanguage()" title="Switch Language (Tiếng Việt / English)" aria-label="Switch Language">
+        🇻🇳 VI
+      </button>
       <button type="button" class="btn btn-outline theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Switch Light / Dark Mode" aria-label="Toggle Light or Dark Mode">
         ☀️ Light
       </button>
@@ -792,17 +795,17 @@
 <div id="toast-container" aria-live="polite"></div>
 
 <!-- App scripts -->
-<script src="/assets/js/config.js?v=31"></script>
-<script src="/assets/js/auth.js?v=31"></script>
-<script src="/assets/js/categories.js?v=31"></script>
-<script src="/assets/js/db.js?v=31"></script>
-<script src="/assets/js/app.js?v=31"></script>
-<script src="/assets/js/dashboard.js?v=31"></script>
-<script src="/assets/js/transactions.js?v=31"></script>
-<script src="/assets/js/charts.js?v=31"></script>
-<script src="/assets/js/budget.js?v=31"></script>
-<script src="/assets/js/portfolio.js?v=31"></script>
-<script src="/assets/js/dataio.js?v=31"></script>
+<script src="/assets/js/config.js?v=32"></script>
+<script src="/assets/js/auth.js?v=32"></script>
+<script src="/assets/js/categories.js?v=32"></script>
+<script src="/assets/js/db.js?v=32"></script>
+<script src="/assets/js/app.js?v=32"></script>
+<script src="/assets/js/dashboard.js?v=32"></script>
+<script src="/assets/js/transactions.js?v=32"></script>
+<script src="/assets/js/charts.js?v=32"></script>
+<script src="/assets/js/budget.js?v=32"></script>
+<script src="/assets/js/portfolio.js?v=32"></script>
+<script src="/assets/js/dataio.js?v=32"></script>
 
 <!-- Service Worker Registration -->
 <script>

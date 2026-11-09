@@ -16,9 +16,9 @@ function submitTransaction(e) {
   const date = document.getElementById('f-date').value;
   const note = document.getElementById('f-note').value.trim();
 
-  if (!amount || amount <= 0) { showToast('Invalid amount', 'error'); return; }
+  if (!amount || amount <= 0) { showToast(tr('Invalid amount', 'Số tiền không hợp lệ'), 'error'); return; }
   const selectedCategory = getCategories(_txType).find(item => item.id === category);
-  if (!selectedCategory) { showToast('Please add or select an active category', 'error'); return; }
+  if (!selectedCategory) { showToast(tr('Please add or select an active category', 'Vui lòng chọn danh mục hợp lệ'), 'error'); return; }
 
   const data = getData();
   const tx = {
@@ -38,7 +38,7 @@ function submitTransaction(e) {
   document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
   setType(_txType);
 
-  showToast('Transaction saved', 'success');
+  showToast(tr('Transaction saved', 'Đã lưu giao dịch'), 'success');
   populateFilterOptions();
   renderDashboard();
 }
@@ -86,15 +86,15 @@ function renderList() {
       const hasNote = Boolean(t.note && t.note.trim());
       return `<tr class="tx-row">
         <td class="td-date" style="white-space:nowrap">${fmtDate(t.date)}</td>
-        <td class="td-type"><span class="badge ${t.type}">${t.type === 'income' ? 'Income' : 'Expense'}</span></td>
+        <td class="td-type"><span class="badge ${t.type}">${t.type === 'income' ? tr('Income', 'Thu nhập') : tr('Expense', 'Chi tiêu')}</span></td>
         <td class="td-cat">${categoryHtml(cat, true)}</td>
         <td class="td-note ${hasNote ? '' : 'td-note-empty'}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.note || '\u2014')}</td>
         <td class="td-amount sensitive-amount" style="text-align:right;font-weight:700;font-family:var(--font-mono);color:${t.type==='income'?'var(--income-color)':'var(--expense-color)'}">
           ${t.type==='income'?'+':'-'}${fmtVND(t.amount)}
         </td>
         <td class="td-actions">
-          <button class="action-btn" title="Edit" onclick="editTransaction(${t.id})">&#9998;</button>
-          <button class="action-btn" title="Delete" onclick="deleteTransaction(${t.id})">&times;</button>
+          <button class="action-btn" title="${tr('Edit', 'Sửa')}" onclick="editTransaction(${t.id})">&#9998;</button>
+          <button class="action-btn" title="${tr('Delete', 'Xóa')}" onclick="deleteTransaction(${t.id})">&times;</button>
         </td>
       </tr>`;
     }).join('');
@@ -103,7 +103,9 @@ function renderList() {
   if (summary) {
     const totInc = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
     const totExp = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-    summary.innerHTML = `Showing <strong>${txs.length}</strong> transactions &middot; Income: <span style="color:var(--income-color)">${fmtVND(totInc)}</span> &middot; Expenses: <span style="color:var(--expense-color)">${fmtVND(totExp)}</span> &middot; Balance: <strong>${fmtVND(totInc-totExp)}</strong>`;
+    summary.innerHTML = isVi()
+      ? `Đang hiển thị <strong>${txs.length}</strong> giao dịch &middot; Thu: <span style="color:var(--income-color)">${fmtVND(totInc)}</span> &middot; Chi: <span style="color:var(--expense-color)">${fmtVND(totExp)}</span> &middot; Cân đối: <strong>${fmtVND(totInc-totExp)}</strong>`
+      : `Showing <strong>${txs.length}</strong> transactions &middot; Income: <span style="color:var(--income-color)">${fmtVND(totInc)}</span> &middot; Expenses: <span style="color:var(--expense-color)">${fmtVND(totExp)}</span> &middot; Balance: <strong>${fmtVND(totInc-totExp)}</strong>`;
   }
 }
 
@@ -122,11 +124,11 @@ function clearFilters() {
 function deleteTransaction(id) {
   _deleteId = id;
   const modal = document.getElementById('delete-modal');
-  document.getElementById('modal-title').textContent = 'Confirm Delete';
-  document.getElementById('modal-body').innerHTML = '<p style="color:var(--text-muted)">Are you sure you want to delete this transaction?</p>';
+  document.getElementById('modal-title').textContent = tr('Confirm Delete', 'Xác Nhận Xóa');
+  document.getElementById('modal-body').innerHTML = `<p style="color:var(--text-muted)">${tr('Are you sure you want to delete this transaction?', 'Bạn có chắc chắn muốn xóa giao dịch này không?')}</p>`;
   document.getElementById('modal-footer').innerHTML = `
-    <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-    <button class="btn btn-danger" id="confirm-delete-btn">Delete</button>
+    <button class="btn btn-outline" onclick="closeModal()">${tr('Cancel', 'Hủy')}</button>
+    <button class="btn btn-danger" id="confirm-delete-btn">${tr('Delete', 'Xóa')}</button>
   `;
   document.getElementById('confirm-delete-btn').onclick = () => {
     const data = getData();
@@ -136,7 +138,7 @@ function deleteTransaction(id) {
     refreshCategoryControls();
     renderList();
     renderDashboard();
-    showToast('Transaction deleted', 'info');
+    showToast(tr('Transaction deleted', 'Đã xóa giao dịch'), 'info');
   };
   openModal(document.querySelector('#modal-footer .btn-outline'));
 }
@@ -147,7 +149,7 @@ function editTransaction(id) {
   if (!tx) return;
 
   const modal = document.getElementById('delete-modal');
-  document.getElementById('modal-title').textContent = 'Edit Transaction';
+  document.getElementById('modal-title').textContent = tr('Edit Transaction', 'Chỉnh Sửa Giao Dịch');
 
   const categories = getCategories(tx.type);
   const currentCategory = getCat(tx.category, tx.type);
@@ -158,35 +160,35 @@ function editTransaction(id) {
   document.getElementById('modal-body').innerHTML = `
     <form id="edit-tx-form" class="form-grid">
       <div class="form-group">
-        <label>Amount (VND)</label>
+        <label>${tr('Amount (VND)', 'Số tiền (VND)')}</label>
         <input type="text" id="edit-amount-display" value="${new Intl.NumberFormat('vi-VN').format(tx.amount)}" required>
         <input type="hidden" id="edit-amount" value="${tx.amount}">
       </div>
       <div class="form-group">
-        <label>Category</label>
+        <label>${tr('Category', 'Danh mục')}</label>
         <select id="edit-category" required></select>
       </div>
       <div class="form-group">
-        <label>Date</label>
+        <label>${tr('Date', 'Ngày')}</label>
         <input type="date" id="edit-date" value="${tx.date}" required>
       </div>
       <div class="form-group">
-        <label>Note</label>
-        <input type="text" id="edit-note" value="${escapeHtml(tx.note || '')}" placeholder="Enter a note...">
+        <label>${tr('Note', 'Ghi chú')}</label>
+        <input type="text" id="edit-note" value="${escapeHtml(tx.note || '')}" placeholder="${tr('Enter a note...', 'Nhập ghi chú...')}">
       </div>
     </form>
   `;
 
   document.getElementById('modal-footer').innerHTML = `
-    <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-    <button class="btn btn-primary" id="confirm-edit-btn">Save Changes</button>
+    <button class="btn btn-outline" onclick="closeModal()">${tr('Cancel', 'Hủy')}</button>
+    <button class="btn btn-primary" id="confirm-edit-btn">${tr('Save Changes', 'Lưu Thay Đổi')}</button>
   `;
 
   const categorySelect = document.getElementById('edit-category');
   categories.forEach(category => {
     const option = document.createElement('option');
     option.value = category.id;
-    option.textContent = `${category.icon} ${category.label}${category.active === false ? ' (removed)' : ''}`;
+    option.textContent = `${category.icon} ${category.label}${category.active === false ? tr(' (removed)', ' (đã ẩn)') : ''}`;
     option.selected = category.id === tx.category;
     categorySelect.appendChild(option);
   });
@@ -212,10 +214,10 @@ function editTransaction(id) {
     const date = document.getElementById('edit-date').value;
     const note = document.getElementById('edit-note').value.trim();
 
-    if (!amount || amount <= 0) { showToast('Invalid amount', 'error'); return; }
+    if (!amount || amount <= 0) { showToast(tr('Invalid amount', 'Số tiền không hợp lệ'), 'error'); return; }
     const selectedCategory = getCat(category, tx.type);
     if (!selectedCategory || (selectedCategory.active === false && category !== tx.category)) {
-      showToast('Please select an active category', 'error');
+      showToast(tr('Please select an active category', 'Vui lòng chọn danh mục đang hoạt động'), 'error');
       return;
     }
 
@@ -235,7 +237,7 @@ function editTransaction(id) {
       refreshCategoryControls();
       renderList();
       renderDashboard();
-      showToast('Transaction updated', 'success');
+      showToast(tr('Transaction updated', 'Đã cập nhật giao dịch'), 'success');
     }
   };
 }

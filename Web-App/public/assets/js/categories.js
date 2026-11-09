@@ -39,6 +39,50 @@ const DEFAULT_INVESTMENTS = [
   { id: 'real_estate',     name: 'Real Estate',       icon: '🏢', color: '#EC4899' }
 ];
 
+const BUILTIN_CATEGORY_LABELS_VI = {
+  luong: 'Lương',
+  thuong: 'Thưởng',
+  'dautư': 'Đầu tư',
+  kinhdoanh: 'Kinh doanh',
+  khac_thu: 'Khác',
+  anuong: 'Ăn uống',
+  'dichuyên': 'Di chuyển',
+  nhao: 'Nhà ở',
+  giaitri: 'Giải trí',
+  suckhoe: 'Sức khỏe',
+  muasam: 'Mua sắm',
+  giaoduc: 'Giáo dục',
+  thethao: 'Thể thao',
+  banhuu: 'Bạn bè',
+  huongthu: 'Hưởng thụ',
+  khac_chi: 'Khác'
+};
+
+const BUILTIN_INVESTMENT_NAMES_VI = {
+  gold: 'Vàng',
+  btc: 'Bitcoin (BTC)',
+  mutual_fund: 'Quỹ mở / ETF',
+  stocks: 'Cổ phiếu',
+  savings_deposit: 'Tiết kiệm kỳ hạn',
+  real_estate: 'Bất động sản'
+};
+
+function getLocalizedCategoryLabel(category) {
+  if (!category) return '';
+  if (typeof isVi === 'function' && isVi() && Object.prototype.hasOwnProperty.call(BUILTIN_CATEGORY_LABELS_VI, category.id)) {
+    return BUILTIN_CATEGORY_LABELS_VI[category.id];
+  }
+  return category.label;
+}
+
+function getAssetDisplayName(asset) {
+  if (!asset) return '';
+  if (typeof isVi === 'function' && isVi() && Object.prototype.hasOwnProperty.call(BUILTIN_INVESTMENT_NAMES_VI, asset.id)) {
+    return BUILTIN_INVESTMENT_NAMES_VI[asset.id];
+  }
+  return asset.name || '';
+}
+
 function cloneDefaultInvestments() {
   return DEFAULT_INVESTMENTS.map((item, idx) => ({
     id: item.id,
@@ -330,7 +374,7 @@ function getCategories(type, options = {}) {
   const list = getCategoryRegistry()[type] || [];
   return list
     .filter(category => includeInactive || category.active !== false)
-    .slice()
+    .map(category => ({ ...category, label: getLocalizedCategoryLabel(category) }))
     .sort((a, b) => (a.order || 0) - (b.order || 0));
 }
 
@@ -345,7 +389,7 @@ function getCat(id, type = null) {
       .find(item => item.id === id);
     if (category) return category;
   }
-  return { id, label: String(id || 'Unknown'), icon: '📌', active: false };
+  return { id, label: String(id || (typeof tr === 'function' ? tr('Unknown', 'Không rõ') : 'Unknown')), icon: '📌', active: false };
 }
 
 function escapeHtml(value) {
@@ -358,7 +402,8 @@ function escapeHtml(value) {
 }
 
 function categoryHtml(category, includeRemoved = false) {
-  const suffix = includeRemoved && category.active === false ? ' <span class="category-removed-label">(removed)</span>' : '';
+  const removedLbl = typeof tr === 'function' ? tr('(removed)', '(đã ẩn)') : '(removed)';
+  const suffix = includeRemoved && category.active === false ? ` <span class="category-removed-label">${removedLbl}</span>` : '';
   return `${escapeHtml(category.icon)} ${escapeHtml(category.label)}${suffix}`;
 }
 
@@ -374,7 +419,9 @@ function updateCategoryFilter() {
 
   const selected = select.value;
   const usedIds = new Set((window._appData?.transactions || []).map(transaction => transaction.category));
-  select.innerHTML = '<option value="">All categories</option>';
+  const allCatLbl = typeof tr === 'function' ? tr('All categories', 'Tất cả danh mục') : 'All categories';
+  const removedLbl = typeof tr === 'function' ? tr(' (removed)', ' (đã ẩn)') : ' (removed)';
+  select.innerHTML = `<option value="">${allCatLbl}</option>`;
 
   CATEGORY_TYPES.forEach(type => {
     const categories = getCategories(type, { includeInactive: true })
@@ -382,11 +429,13 @@ function updateCategoryFilter() {
     if (categories.length === 0) return;
 
     const group = document.createElement('optgroup');
-    group.label = type === 'income' ? 'Income' : 'Expense';
+    group.label = type === 'income'
+      ? (typeof tr === 'function' ? tr('Income', 'Thu nhập') : 'Income')
+      : (typeof tr === 'function' ? tr('Expense', 'Chi tiêu') : 'Expense');
     categories.forEach(category => {
       const option = document.createElement('option');
       option.value = category.id;
-      option.textContent = `${category.icon} ${category.label}${category.active === false ? ' (removed)' : ''}`;
+      option.textContent = `${category.icon} ${category.label}${category.active === false ? removedLbl : ''}`;
       group.appendChild(option);
     });
     select.appendChild(group);
@@ -473,7 +522,9 @@ function addCategory(event) {
   refreshAllUI();
   if (nameInput) nameInput.value = '';
   if (iconInput) iconInput.value = '';
-  showToast(restored ? 'Category restored' : 'Category added', 'success');
+  showToast(restored
+    ? (typeof tr === 'function' ? tr('Category restored', 'Đã khôi phục danh mục') : 'Category restored')
+    : (typeof tr === 'function' ? tr('Category added', 'Đã thêm danh mục') : 'Category added'), 'success');
 
   if (type === 'expense') {
     requestAnimationFrame(() => {
@@ -497,31 +548,40 @@ function requestRemoveCategory(type, id) {
   const footer = document.getElementById('modal-footer');
   if (!modal || !title || !body || !footer) return;
 
-  title.textContent = 'Remove Category';
+  title.textContent = typeof tr === 'function' ? tr('Remove Category', 'Ẩn Danh Mục') : 'Remove Category';
   body.innerHTML = '';
   const message = document.createElement('p');
   message.className = 'modal-message';
-  message.textContent = `Remove “${category.label}”? It will no longer be available for new transactions${type === 'expense' ? ' or budgets' : ''}.`;
+  message.textContent = typeof isVi === 'function' && isVi()
+    ? `Ẩn danh mục “${category.label}”? Danh mục này sẽ không xuất hiện khi tạo giao dịch mới${type === 'expense' ? ' hoặc ngân sách' : ''}.`
+    : `Remove “${category.label}”? It will no longer be available for new transactions${type === 'expense' ? ' or budgets' : ''}.`;
   body.appendChild(message);
 
   const detail = document.createElement('p');
   detail.className = 'modal-detail';
-  const transactionText = transactionCount
-    ? `${transactionCount} existing transaction${transactionCount === 1 ? '' : 's'} will keep this category and remain in reports.`
-    : 'You can restore this category later.';
-  detail.textContent = transactionText + (hasBudget ? ' Its saved budget will be kept and restored with the category.' : '');
+  if (typeof isVi === 'function' && isVi()) {
+    const txText = transactionCount
+      ? `${transactionCount} giao dịch hiện có vẫn giữ nguyên danh mục này trong báo cáo.`
+      : 'Bạn có thể khôi phục lại danh mục này bất kỳ lúc nào.';
+    detail.textContent = txText + (hasBudget ? ' Ngân sách đã lưu sẽ được giữ nguyên khi khôi phục.' : '');
+  } else {
+    const transactionText = transactionCount
+      ? `${transactionCount} existing transaction${transactionCount === 1 ? '' : 's'} will keep this category and remain in reports.`
+      : 'You can restore this category later.';
+    detail.textContent = transactionText + (hasBudget ? ' Its saved budget will be kept and restored with the category.' : '');
+  }
   body.appendChild(detail);
 
   footer.innerHTML = '';
   const cancelButton = document.createElement('button');
   cancelButton.type = 'button';
   cancelButton.className = 'btn btn-outline';
-  cancelButton.textContent = 'Cancel';
+  cancelButton.textContent = typeof tr === 'function' ? tr('Cancel', 'Hủy') : 'Cancel';
   cancelButton.addEventListener('click', closeModal);
   const removeButton = document.createElement('button');
   removeButton.type = 'button';
   removeButton.className = 'btn btn-danger';
-  removeButton.textContent = 'Remove category';
+  removeButton.textContent = typeof tr === 'function' ? tr('Remove category', 'Ẩn danh mục') : 'Remove category';
   removeButton.addEventListener('click', () => removeCategory(type, id));
   footer.append(cancelButton, removeButton);
 
@@ -537,7 +597,7 @@ function removeCategory(type, id) {
   saveData(data, { immediate: true });
   closeModal();
   refreshAllUI();
-  showToast('Category removed', 'info');
+  showToast(typeof tr === 'function' ? tr('Category removed', 'Đã ẩn danh mục') : 'Category removed', 'info');
 }
 
 function restoreCategory(type, id) {
@@ -553,7 +613,7 @@ function restoreCategory(type, id) {
   category.archivedAt = null;
   saveData(data, { immediate: true });
   refreshAllUI();
-  showToast('Category restored', 'success');
+  showToast(typeof tr === 'function' ? tr('Category restored', 'Đã khôi phục danh mục') : 'Category restored', 'success');
 }
 
 function renderCategoryManager() {
@@ -574,9 +634,13 @@ function renderCategoryManager() {
     const heading = document.createElement('div');
     heading.className = 'category-group-heading';
     const title = document.createElement('h3');
-    title.textContent = type === 'income' ? 'Income' : 'Expense';
+    title.textContent = type === 'income'
+      ? (typeof tr === 'function' ? tr('Income', 'Thu nhập') : 'Income')
+      : (typeof tr === 'function' ? tr('Expense', 'Chi tiêu') : 'Expense');
     const count = document.createElement('span');
-    count.textContent = `${active.length} active`;
+    count.textContent = typeof isVi === 'function' && isVi()
+      ? `${active.length} đang dùng`
+      : `${active.length} active`;
     heading.append(title, count);
     section.appendChild(heading);
 
@@ -585,7 +649,9 @@ function renderCategoryManager() {
     if (active.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'category-empty';
-      empty.textContent = `No active ${type} categories.`;
+      empty.textContent = typeof isVi === 'function' && isVi()
+        ? 'Chưa có danh mục đang hoạt động.'
+        : `No active ${type} categories.`;
       list.appendChild(empty);
     } else {
       active.forEach(category => list.appendChild(buildCategoryRow(category, type, false)));
@@ -598,7 +664,9 @@ function renderCategoryManager() {
       removed.dataset.type = type;
       removed.open = openRemovedTypes.has(type);
       const summary = document.createElement('summary');
-      summary.textContent = `Removed (${inactive.length})`;
+      summary.textContent = typeof isVi === 'function' && isVi()
+        ? `Đã ẩn (${inactive.length})`
+        : `Removed (${inactive.length})`;
       removed.appendChild(summary);
       const removedList = document.createElement('div');
       removedList.className = 'category-list removed-category-list';
@@ -629,7 +697,7 @@ function buildCategoryRow(category, type, inactive) {
   button.type = 'button';
   if (inactive) {
     button.className = 'category-restore-btn';
-    button.textContent = 'Restore';
+    button.textContent = typeof tr === 'function' ? tr('Restore', 'Khôi phục') : 'Restore';
     button.setAttribute('aria-label', `Restore category ${category.label}`);
     button.addEventListener('click', () => restoreCategory(type, category.id));
   } else {

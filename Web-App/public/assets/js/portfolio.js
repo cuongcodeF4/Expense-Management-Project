@@ -159,30 +159,30 @@ function renderPortfolioSummaryKpis(assets) {
   el.innerHTML = `
     <div class="summary-card balance">
       <div>
-        <div class="sc-label">Total Portfolio Value</div>
+        <div class="sc-label">${tr('Total Portfolio Value', 'Tổng Giá Trị Danh Mục')}</div>
         <div class="sc-value sensitive-amount" style="color:var(--primary)">${fmtVND(totalCurrent)}</div>
-        <div class="sc-sub">${activeCount} funded / ${assets.length} total assets</div>
+        <div class="sc-sub">${activeCount} ${tr('funded', 'có vốn')} / ${assets.length} ${tr('total assets', 'tài sản')}</div>
       </div>
     </div>
     <div class="summary-card income">
       <div>
-        <div class="sc-label">Total Invested Capital</div>
+        <div class="sc-label">${tr('Total Invested Capital', 'Tổng Vốn Đầu Tư')}</div>
         <div class="sc-value sensitive-amount" style="color:var(--text)">${fmtVND(totalInvested)}</div>
-        <div class="sc-sub">Initial principal across all assets</div>
+        <div class="sc-sub">${tr('Initial principal across all assets', 'Vốn gốc ban đầu của tất cả tài sản')}</div>
       </div>
     </div>
     <div class="summary-card ${totalPnl >= 0 ? 'income' : 'expense'}">
       <div>
-        <div class="sc-label">Total Net Profit / Loss</div>
+        <div class="sc-label">${tr('Total Net Profit / Loss', 'Tổng Lãi / Lỗ Ròng')}</div>
         <div class="sc-value sensitive-amount" style="color:${pnlColor}">${fmtSignedVND(totalPnl)}</div>
-        <div class="sc-sub">${totalPnl >= 0 ? 'Unrealized gain' : 'Unrealized drawdown'}</div>
+        <div class="sc-sub">${totalPnl >= 0 ? tr('Unrealized gain', 'Lợi nhuận tạm tính') : tr('Unrealized drawdown', 'Sụt giảm tạm tính')}</div>
       </div>
     </div>
     <div class="summary-card saving">
       <div>
-        <div class="sc-label">Portfolio ROI (%)</div>
+        <div class="sc-label">${tr('Portfolio ROI (%)', 'Tỷ Suất Sinh Lời ROI (%)')}</div>
         <div class="sc-value" style="color:${pnlColor}">${fmtSignedPct(totalRoi)}</div>
-        <div class="sc-sub">${topAsset && totalCurrent > 0 ? `Top: ${escapeHtml(topAsset.icon)} ${escapeHtml(topAsset.name)} (${topShare})` : 'Add valuations below'}</div>
+        <div class="sc-sub">${topAsset && totalCurrent > 0 ? `${tr('Top:', 'Lớn nhất:')} ${escapeHtml(topAsset.icon)} ${escapeHtml(getAssetDisplayName(topAsset))} (${topShare})` : tr('Add valuations below', 'Nhập giá trị bên dưới')}</div>
       </div>
     </div>
   `;
@@ -196,7 +196,7 @@ function renderPortfolioCards(assets) {
     grid.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1">
         <div class="es-icon">📈</div>
-        <div class="es-text">No investment categories yet. Tap "+ Add Investment Category" above to create one.</div>
+        <div class="es-text">${tr('No investment categories yet. Tap "+ Add Investment Category" above to create one.', 'Chưa có danh mục đầu tư nào. Nhấn "+ Thêm Danh Mục Đầu Tư" ở trên để tạo mới.')}</div>
       </div>
     `;
     return;
@@ -213,39 +213,40 @@ function renderPortfolioCards(assets) {
     const pnlColor = pnl >= 0 ? 'var(--income-color)' : 'var(--expense-color)';
     const isSelected = _selectedAssetId === asset.id;
     const monthCount = Object.keys(asset.monthlyHistory || {}).length;
+    const dispName = getAssetDisplayName(asset);
 
     return `
       <div class="budget-item portfolio-asset-card ${isSelected ? 'selected' : ''}" data-asset-id="${escapeHtml(asset.id)}" onclick="handleAssetCardClick(event, '${escapeHtml(asset.id)}')">
         <div class="budget-header" style="gap:8px">
           <div class="budget-cat" style="display:flex;align-items:center;gap:7px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
             <span class="portfolio-color-dot" style="background:${escapeHtml(asset.color || '#00E599')}"></span>
-            <span style="overflow:hidden;text-overflow:ellipsis">${escapeHtml(asset.icon)} ${escapeHtml(asset.name)}</span>
+            <span style="overflow:hidden;text-overflow:ellipsis">${escapeHtml(asset.icon)} ${escapeHtml(dispName)}</span>
           </div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
             <span class="badge ${pnl >= 0 ? 'income' : 'expense'}" style="font-family:var(--font-mono)">${fmtSignedPct(roi)}</span>
-            <button type="button" class="action-btn" title="Delete ${escapeHtml(asset.name)}" onclick="deleteInvestmentCategory('${escapeHtml(asset.id)}')">🗑</button>
+            <button type="button" class="action-btn" title="${tr('Delete', 'Xóa')} ${escapeHtml(dispName)}" onclick="deleteInvestmentCategory('${escapeHtml(asset.id)}')">🗑</button>
           </div>
         </div>
 
         <div class="budget-amounts">
-          <span>Share: <strong>${sharePct.toFixed(1)}%</strong></span>
-          <span>P&amp;L: <strong class="sensitive-amount" style="color:${pnlColor}">${fmtSignedVND(pnl)}</strong></span>
+          <span>${tr('Share:', 'Tỷ trọng:')} <strong>${sharePct.toFixed(1)}%</strong></span>
+          <span>${tr('P&L:', 'Lãi/Lỗ:')} <strong class="sensitive-amount" style="color:${pnlColor}">${fmtSignedVND(pnl)}</strong></span>
         </div>
 
-        <div class="progress-bar" title="Portfolio Allocation: ${sharePct.toFixed(1)}%">
+        <div class="progress-bar" title="${tr('Portfolio Allocation:', 'Tỷ trọng danh mục:')} ${sharePct.toFixed(1)}%">
           <div class="progress-fill" style="width:${Math.min(100, Math.max(0, sharePct)).toFixed(1)}%;background:${escapeHtml(asset.color || '#00E599')}"></div>
         </div>
 
         <div class="portfolio-quick-inputs">
           <div class="form-group">
-            <label for="inv-init-${escapeHtml(asset.id)}">Invested (VND)</label>
+            <label for="inv-init-${escapeHtml(asset.id)}">${tr('Invested (VND)', 'Vốn đầu tư (VND)')}</label>
             <input type="text" inputmode="numeric" id="inv-init-${escapeHtml(asset.id)}"
               value="${inv > 0 ? new Intl.NumberFormat('vi-VN').format(inv) : ''}"
               placeholder="0"
               oninput="formatPortfolioNumericInput(this)">
           </div>
           <div class="form-group">
-            <label for="inv-cur-${escapeHtml(asset.id)}">Current (VND)</label>
+            <label for="inv-cur-${escapeHtml(asset.id)}">${tr('Current (VND)', 'Hiện tại (VND)')}</label>
             <input type="text" inputmode="numeric" id="inv-cur-${escapeHtml(asset.id)}"
               value="${cur > 0 ? new Intl.NumberFormat('vi-VN').format(cur) : ''}"
               placeholder="0"
@@ -255,10 +256,10 @@ function renderPortfolioCards(assets) {
 
         <div class="portfolio-card-actions">
           <button type="button" class="btn btn-primary" onclick="saveAssetQuickAmounts('${escapeHtml(asset.id)}')">
-            Save
+            ${tr('Save', 'Lưu')}
           </button>
           <button type="button" class="btn btn-outline" onclick="openInvestmentDetail('${escapeHtml(asset.id)}')">
-            📊 Monthly P&amp;L (${monthCount})
+            📊 ${tr('Monthly P&L', 'Lãi/Lỗ Tháng')} (${monthCount})
           </button>
         </div>
       </div>
@@ -277,7 +278,7 @@ function renderPortfolioAllocationTable(assets) {
   const totalRoi = totalInvested > 0 ? ((totalPnl / totalInvested) * 100) : 0;
 
   if (assets.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px">No investment assets available.</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px">${tr('No investment assets available.', 'Chưa có tài sản đầu tư nào.')}</td></tr>`;
     tfoot.innerHTML = '';
     return;
   }
@@ -292,13 +293,14 @@ function renderPortfolioAllocationTable(assets) {
     const roi = inv > 0 ? ((pnl / inv) * 100) : (cur > 0 ? 100 : 0);
     const sharePct = totalCurrent > 0 ? ((cur / totalCurrent) * 100) : 0;
     const pnlColor = pnl >= 0 ? 'var(--income-color)' : 'var(--expense-color)';
+    const dispName = getAssetDisplayName(asset);
 
     return `
-      <tr class="portfolio-table-row" onclick="openInvestmentDetail('${escapeHtml(asset.id)}')" style="cursor:pointer" title="Click to log monthly valuation &amp; view ROI chart">
+      <tr class="portfolio-table-row" onclick="openInvestmentDetail('${escapeHtml(asset.id)}')" style="cursor:pointer" title="${tr('Click to log monthly valuation & view ROI chart', 'Nhấn để ghi định giá theo tháng & xem biểu đồ ROI')}">
         <td>
           <div style="display:flex;align-items:center;gap:8px;font-weight:700">
             <span class="portfolio-color-dot" style="background:${escapeHtml(asset.color || '#00E599')}"></span>
-            <span>${escapeHtml(asset.icon)} ${escapeHtml(asset.name)}</span>
+            <span>${escapeHtml(asset.icon)} ${escapeHtml(dispName)}</span>
           </div>
         </td>
         <td class="sensitive-amount" style="text-align:right;font-family:var(--font-mono)">${fmtVND(inv)}</td>
@@ -314,7 +316,7 @@ function renderPortfolioAllocationTable(assets) {
           </div>
         </td>
         <td style="text-align:right" onclick="event.stopPropagation()">
-          <button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:11px" onclick="openInvestmentDetail('${escapeHtml(asset.id)}')">Monthly Log ›</button>
+          <button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:11px" onclick="openInvestmentDetail('${escapeHtml(asset.id)}')">${tr('Monthly Log ›', 'Chi tiết tháng ›')}</button>
         </td>
       </tr>
     `;
@@ -323,7 +325,7 @@ function renderPortfolioAllocationTable(assets) {
   const totalPnlColor = totalPnl >= 0 ? 'var(--income-color)' : 'var(--expense-color)';
   tfoot.innerHTML = `
     <tr class="remaining-total-row">
-      <td style="font-weight:800">Total Portfolio</td>
+      <td style="font-weight:800">${tr('Total Portfolio', 'Tổng Danh Mục')}</td>
       <td class="sensitive-amount" style="text-align:right;font-family:var(--font-mono);font-weight:800">${fmtVND(totalInvested)}</td>
       <td class="sensitive-amount" style="text-align:right;font-family:var(--font-mono);font-weight:800;color:var(--primary)">${fmtVND(totalCurrent)}</td>
       <td class="sensitive-amount" style="text-align:right;font-family:var(--font-mono);font-weight:800;color:${totalPnlColor}">${fmtSignedVND(totalPnl)}</td>
@@ -364,7 +366,7 @@ function renderPortfolioCharts(assets) {
 
       if (points.some(v => v !== null)) {
         datasets.push({
-          label: `${asset.icon} ${asset.name}`,
+          label: `${asset.icon} ${getAssetDisplayName(asset)}`,
           data: points,
           borderColor: asset.color || PIE_COLORS[idx % PIE_COLORS.length],
           backgroundColor: asset.color || PIE_COLORS[idx % PIE_COLORS.length],
@@ -397,7 +399,7 @@ function renderPortfolioCharts(assets) {
 
     if (totalPoints.some(v => v !== null)) {
       datasets.push({
-        label: '★ Total Portfolio ROI',
+        label: tr('★ Total Portfolio ROI', '★ Tổng ROI Danh Mục'),
         data: totalPoints,
         borderColor: isLight ? '#062019' : '#FFFFFF',
         backgroundColor: isLight ? '#062019' : '#FFFFFF',
@@ -413,7 +415,7 @@ function renderPortfolioCharts(assets) {
     // If user hasn't entered amounts yet, show a flat 0% baseline so chart canvas stays informative
     if (datasets.length === 0) {
       datasets.push({
-        label: 'Portfolio ROI (%)',
+        label: tr('Portfolio ROI (%)', 'ROI Danh mục (%)'),
         data: months.map(() => 0),
         borderColor: '#00E599',
         backgroundColor: 'rgba(0, 229, 153, 0.12)',
@@ -483,12 +485,12 @@ function renderPortfolioCharts(assets) {
 
     if (funded.length === 0) {
       if (allocLegend) {
-        allocLegend.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Enter Current Value in any asset card to visualize allocation %</span>';
+        allocLegend.innerHTML = `<span style="color:var(--text-muted);font-size:12px">${tr('Enter Current Value in any asset card to visualize allocation %', 'Nhập Giá trị hiện tại ở thẻ tài sản bất kỳ để xem tỷ trọng %')}</span>`;
       }
       _charts.portfolioAlloc = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: ['Unallocated'],
+          labels: [tr('Unallocated', 'Chưa phân bổ')],
           datasets: [{ data: [1], backgroundColor: ['rgba(148, 163, 184, 0.2)'], borderWidth: 0 }]
         },
         options: {
@@ -504,7 +506,7 @@ function renderPortfolioCharts(assets) {
     _charts.portfolioAlloc = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: funded.map(a => `${a.icon} ${a.name}`),
+        labels: funded.map(a => `${a.icon} ${getAssetDisplayName(a)}`),
         datasets: [{
           data: funded.map(a => getEffectiveAssetCurrent(a)),
           backgroundColor: funded.map((a, i) => a.color || PIE_COLORS[i % PIE_COLORS.length]),
@@ -541,7 +543,7 @@ function renderPortfolioCharts(assets) {
         return `
           <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="openInvestmentDetail('${escapeHtml(a.id)}')">
             <span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${col};flex-shrink:0"></span>
-            <span style="font-size:12px;color:var(--text)">${escapeHtml(a.icon)} ${escapeHtml(a.name)}</span>
+            <span style="font-size:12px;color:var(--text)">${escapeHtml(a.icon)} ${escapeHtml(getAssetDisplayName(a))}</span>
             <span style="margin-left:auto;font-family:var(--font-mono);font-weight:700;font-size:12px">${pct}%</span>
           </div>
         `;
@@ -562,8 +564,10 @@ function bindPortfolioMultiLineTouch(chart, isSingleAsset = false, assetRef = nu
   if (cardBody && !readout) {
     readout = document.createElement('div');
     readout.className = 'chart-active-readout';
-    readout.innerHTML = '<span class="chart-readout-hint">👆 Tap or drag across months to inspect ROI (%) &amp; P&amp;L</span>';
+    readout.innerHTML = `<span class="chart-readout-hint">${tr('👆 Tap or drag across months to inspect ROI (%) & P&L', '👆 Chạm hoặc kéo qua các tháng để xem ROI (%) & Lãi/Lỗ')}</span>`;
     cardBody.insertBefore(readout, cardBody.firstChild);
+  } else if (readout && !readout.classList.contains('active')) {
+    readout.innerHTML = `<span class="chart-readout-hint">${tr('👆 Tap or drag across months to inspect ROI (%) & P&L', '👆 Chạm hoặc kéo qua các tháng để xem ROI (%) & Lãi/Lỗ')}</span>`;
   }
 
   function handlePointer(clientX, clientY, isClick = false) {
@@ -914,16 +918,16 @@ function renderSelectedAssetDetail(assets) {
   const selEl = document.getElementById('detail-asset-select');
   if (selEl) {
     selEl.innerHTML = assets.map(a =>
-      `<option value="${escapeHtml(a.id)}" ${a.id === asset.id ? 'selected' : ''}>${escapeHtml(a.icon)} ${escapeHtml(a.name)}</option>`
+      `<option value="${escapeHtml(a.id)}" ${a.id === asset.id ? 'selected' : ''}>${escapeHtml(a.icon)} ${escapeHtml(getAssetDisplayName(a))}</option>`
     ).join('');
   }
 
   const badgeEl = document.getElementById('detail-asset-summary-badge');
   if (badgeEl) {
     badgeEl.innerHTML = `
-      <span>Invested: <strong class="sensitive-amount">${fmtVND(inv)}</strong></span>
-      <span>Current: <strong class="sensitive-amount">${fmtVND(cur)}</strong></span>
-      <span>Net P&amp;L: <strong class="sensitive-amount" style="color:${pnlColor}">${fmtSignedVND(pnl)} (${fmtSignedPct(roi)})</strong></span>
+      <span>${tr('Invested:', 'Vốn:')} <strong class="sensitive-amount">${fmtVND(inv)}</strong></span>
+      <span>${tr('Current:', 'Hiện tại:')} <strong class="sensitive-amount">${fmtVND(cur)}</strong></span>
+      <span>${tr('Net P&L:', 'Lãi/Lỗ ròng:')} <strong class="sensitive-amount" style="color:${pnlColor}">${fmtSignedVND(pnl)} (${fmtSignedPct(roi)})</strong></span>
     `;
   }
 
@@ -1041,7 +1045,7 @@ function renderAssetMonthlyTable(asset) {
 
   const entries = Object.entries(asset.monthlyHistory || {}).sort((a, b) => b[0].localeCompare(a[0]));
   if (entries.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:18px">No monthly entries recorded yet. Choose a month above and click Save Monthly Valuation.</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:18px">${tr('No monthly entries recorded yet. Choose a month above and click Save Monthly Valuation.', 'Chưa có lịch sử tháng nào. Chọn tháng ở trên và nhấn Lưu Định Giá Tháng.')}</td></tr>`;
     return;
   }
 
@@ -1116,7 +1120,7 @@ function renderAssetDetailChart(asset) {
       datasets: [
         {
           type: 'line',
-          label: `${asset.name} ROI (%)`,
+          label: `${getAssetDisplayName(asset)} ROI (%)`,
           data: roiData,
           borderColor: asset.color || '#00E599',
           backgroundColor: 'rgba(0, 229, 153, 0.12)',
@@ -1128,7 +1132,7 @@ function renderAssetDetailChart(asset) {
         },
         {
           type: 'bar',
-          label: 'Monthly P&L (%)',
+          label: tr('Monthly P&L (%)', 'Lãi/Lỗ Tháng (%)'),
           data: roiData,
           backgroundColor: barColors,
           borderColor: borderColors,
